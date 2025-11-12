@@ -1,35 +1,75 @@
+import { CustomTabBar } from '@/components/CustomTabBar';
+import { useTaskStore } from '@/stores/taskStore';
+import { useUserStore } from '@/stores/userStore';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+const _layout = () => {
 
+    const { setUserId, loadEssentialTasks, loadRecentCompleted } = useTaskStore();
+     const { loadUser } = useUserStore();
+  
+    useEffect(() => {
+      const initializeStores = async () => {
+        try {
+          // Cargar usuario primero
+          await loadUser();
+          
+          // Obtener el user ID
+          const user = useUserStore.getState().user;
+          
+          if (user) {
+            setUserId(user.id);
+            
+            // Cargar tareas
+            await loadEssentialTasks();
+            await loadRecentCompleted();
+            
+            console.log('✅ Stores initialized');
+          }
+        } catch (error) {
+          console.error('❌ Error initializing stores:', error);
+        }
+      };
+      
+      initializeStores();
+    }, []);
+  
+  
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="Home/index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="Stats/index"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Estadísticas',
+        }}
+      />
+      <Tabs.Screen
+        name="Agenda/index"
+        options={{
+          title: 'Agenda',
+        }}
+      />
+      <Tabs.Screen
+        name="Profile/index"
+        options={{
+          title: 'Perfil',
         }}
       />
     </Tabs>
-  );
+  )
 }
+
+export default _layout
