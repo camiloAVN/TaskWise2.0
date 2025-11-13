@@ -1,3 +1,5 @@
+// components/home/CurrentTaskCard.tsx
+
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,12 +9,14 @@ interface CurrentTaskCardProps {
   task: Task | null;
   onTaskPress?: () => void;
   onCompletePress?: () => void;
+  onPomodoroPress?: () => void; // ✅ NUEVO
 }
 
 export const CurrentTaskCard: React.FC<CurrentTaskCardProps> = ({
   task,
   onTaskPress,
   onCompletePress,
+  onPomodoroPress, // ✅ NUEVO
 }) => {
   if (!task) {
     return (
@@ -37,9 +41,24 @@ export const CurrentTaskCard: React.FC<CurrentTaskCardProps> = ({
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.label}>Tarea Actual</Text>
-        <View style={styles.difficultyBadge}>
-          <Text style={styles.difficultyIcon}>{difficultyInfo.icon}</Text>
-          <Text style={styles.xpText}>+{task.basePoints} XP</Text>
+        <View style={styles.headerRight}>
+          {/* ✅ NUEVO: Botón Pomodoro */}
+          <TouchableOpacity
+            style={styles.pomodoroButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onPomodoroPress?.();
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="timer-outline" size={16} color="#949494" />
+            <Text style={styles.pomodoroButtonText}>Pomodoro</Text>
+          </TouchableOpacity>
+
+          <View style={styles.difficultyBadge}>
+            <Text style={styles.difficultyIcon}>{difficultyInfo.icon}</Text>
+            <Text style={styles.xpText}>+{task.basePoints} XP</Text>
+          </View>
         </View>
       </View>
 
@@ -78,7 +97,7 @@ export const CurrentTaskCard: React.FC<CurrentTaskCardProps> = ({
         }}
         activeOpacity={0.8}
       >
-        <Ionicons name="checkmark-circle" size={24} color="#000" />
+        <Ionicons name="checkmark-circle" size={24} color="#949494" />
         <Text style={styles.completeButtonText}>Completar</Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -105,6 +124,26 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  // ✅ NUEVO: Botón Pomodoro
+  pomodoroButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#000',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  pomodoroButtonText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#d9f434',
   },
   difficultyBadge: {
     flexDirection: 'row',

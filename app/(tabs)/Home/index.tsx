@@ -12,6 +12,7 @@ import { CurrentTaskCard } from '../../../components/home/CurrentTaskCard';
 import { DailyProgressCard } from '../../../components/home/DailyProgressCard';
 import { TaskList } from '../../../components/home/TaskList';
 import { UserHeader } from '../../../components/home/UserHeader';
+import { PomodoroModal } from '../../../components/modals/PomodoroModal'; // ✅ NUEVO
 import { Task } from '../../../types/task';
 import { getTodayDate } from '../../../utils/dateUtils';
 import { calculateTaskPoints } from '../../../utils/xpUtils';
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const { isAddTaskModalOpen, closeAddTaskModal } = useUIStore();
   
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [pomodoroVisible, setPomodoroVisible] = useState(false); // ✅ NUEVO
   
   const {
     todayTasks,
@@ -29,7 +31,7 @@ export default function HomeScreen() {
     refreshTasks,
     completeTask,
     toggleTask,
-    deleteTask, // ✅ AGREGAR
+    deleteTask,
   } = useTaskStore();
 
   const {
@@ -39,6 +41,8 @@ export default function HomeScreen() {
     updateStreak,
     checkAndUpdateAchievements,
   } = useUserStore();
+
+  // ... código anterior (allTodayTasks, completedToday, etc.)
 
   const allTodayTasks = useMemo(() => {
     const today = getTodayDate();
@@ -63,6 +67,8 @@ export default function HomeScreen() {
 
   const currentTask = allTodayTasks.find(t => !t.completed);
   const upcomingTasks = allTodayTasks.filter(t => !t.completed && t.id !== currentTask?.id);
+
+  // ... handlers anteriores (handleRefresh, handleCompleteTask, etc.)
 
   const handleRefresh = async () => {
     await refreshTasks();
@@ -115,13 +121,11 @@ export default function HomeScreen() {
     setTaskToEdit(null);
   };
 
-  // ✅ NUEVO: Manejar eliminación de tareas
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
       console.log('✅ Task deleted:', taskId);
       
-      // Mostrar feedback al usuario
       Alert.alert(
         '✅ Tarea Eliminada',
         'La tarea se ha eliminado correctamente',
@@ -178,6 +182,7 @@ export default function HomeScreen() {
               handleCompleteTask(currentTask.id);
             }
           }}
+          onPomodoroPress={() => setPomodoroVisible(true)} // ✅ NUEVO
         />
 
         <DailyProgressCard
@@ -191,7 +196,7 @@ export default function HomeScreen() {
           allTodayTasks={allTodayTasks}
           onTaskPress={(task) => handleEditTask(task)}
           onToggleComplete={(taskId) => toggleTask(taskId)}
-          onDeleteTask={handleDeleteTask} // ✅ NUEVO
+          onDeleteTask={handleDeleteTask}
         />
       </ScrollView>
 
@@ -199,6 +204,13 @@ export default function HomeScreen() {
         visible={isAddTaskModalOpen || !!taskToEdit}
         onClose={handleCloseModal}
         taskToEdit={taskToEdit}
+      />
+
+      {/* ✅ NUEVO: Modal Pomodoro */}
+      <PomodoroModal
+        visible={pomodoroVisible}
+        onClose={() => setPomodoroVisible(false)}
+        taskTitle={currentTask?.title}
       />
     </SafeAreaView>
   );
