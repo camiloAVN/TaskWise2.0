@@ -1,3 +1,4 @@
+import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
@@ -31,6 +32,7 @@ const _layout = () => {
         await seedInitialData();
 
         await initializeImageDirectory();
+        await migrateAddUserFields();
         
         // Verificar salud de la DB
         const health = await checkDatabaseHealth();

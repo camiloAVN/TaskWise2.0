@@ -6,30 +6,36 @@ export class UserRepository {
   /**
    * Crear usuario
    */
-  static async create(input: CreateUserInput): Promise<User> {
-    try {
-      const db = await getDatabase();
-      const now = new Date().toISOString();
+static async create(input: CreateUserInput): Promise<User> {
+  try {
+    const db = await getDatabase();
+    const now = new Date().toISOString();
 
-      const result = await db.runAsync(
-        `INSERT INTO users (name, avatar, createdAt, lastActivity)
-         VALUES (?, ?, ?, ?)`,
-        [input.name, input.avatar || null, now, now]
-      );
+    const result = await db.runAsync(
+      `INSERT INTO users (name, avatar, age, email, createdAt, lastActivity)
+       VALUES (?, ?, ?, ?, ?, ?)`,  // ⭐ Agregar age y email
+      [
+        input.name, 
+        input.avatar || null, 
+        input.age || null,  // ⭐ NUEVO
+        input.email || null,  // ⭐ NUEVO
+        now, 
+        now
+      ]
+    );
 
-      const user = await this.findById(result.lastInsertRowId);
-      if (!user) {
-        throw new Error('Failed to create user');
-      }
-
-      console.log('✅ User created:', user.id);
-      return user;
-    } catch (error) {
-      console.error('❌ Error creating user:', error);
-      throw error;
+    const user = await this.findById(result.lastInsertRowId);
+    if (!user) {
+      throw new Error('Failed to create user');
     }
-  }
 
+    console.log('✅ User created:', user.id);
+    return user;
+  } catch (error) {
+    console.error('❌ Error creating user:', error);
+    throw error;
+  }
+}
   /**
    * Obtener usuario por ID
    */
@@ -85,44 +91,53 @@ export class UserRepository {
   /**
    * Actualizar usuario
    */
-  static async update(id: number, input: UpdateUserInput): Promise<User> {
-    try {
-      const db = await getDatabase();
-      const now = new Date().toISOString();
+static async update(id: number, input: UpdateUserInput): Promise<User> {
+  try {
+    const db = await getDatabase();
+    const now = new Date().toISOString();
 
-      const fields: string[] = [];
-      const values: any[] = [];
+    const fields: string[] = [];
+    const values: any[] = [];
 
-      if (input.name !== undefined) {
-        fields.push('name = ?');
-        values.push(input.name);
-      }
-      if (input.avatar !== undefined) {
-        fields.push('avatar = ?');
-        values.push(input.avatar);
-      }
-
-      fields.push('lastActivity = ?');
-      values.push(now);
-      values.push(id);
-
-      await db.runAsync(
-        `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
-        values
-      );
-
-      const user = await this.findById(id);
-      if (!user) {
-        throw new Error('User not found after update');
-      }
-
-      console.log('✅ User updated:', id);
-      return user;
-    } catch (error) {
-      console.error('❌ Error updating user:', error);
-      throw error;
+    if (input.name !== undefined) {
+      fields.push('name = ?');
+      values.push(input.name);
     }
+    if (input.avatar !== undefined) {
+      fields.push('avatar = ?');
+      values.push(input.avatar);
+    }
+    // ⭐ AGREGAR ESTOS CAMPOS
+    if (input.age !== undefined) {
+      fields.push('age = ?');
+      values.push(input.age);
+    }
+    if (input.email !== undefined) {
+      fields.push('email = ?');
+      values.push(input.email);
+    }
+
+    fields.push('lastActivity = ?');
+    values.push(now);
+    values.push(id);
+
+    await db.runAsync(
+      `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    const user = await this.findById(id);
+    if (!user) {
+      throw new Error('User not found after update');
+    }
+
+    console.log('✅ User updated:', id);
+    return user;
+  } catch (error) {
+    console.error('❌ Error updating user:', error);
+    throw error;
   }
+}
 
   /**
    * Agregar XP al usuario
@@ -344,36 +359,37 @@ export class UserRepository {
   /**
    * Helper para mapear row a User
    */
-  private static mapRowToUser(row: any): User {
-    // Obtener logros desbloqueados (necesitamos hacerlo en otra query)
-    return {
-      id: row.id,
-      name: row.name,
-      avatar: row.avatar || undefined,
-      
-      totalXP: row.totalXP,
-      currentLevel: row.currentLevel,
-      currentLevelXP: row.currentLevelXP,
-      nextLevelXP: row.nextLevelXP,
-      category: row.category,
-      
-      totalTasksCompleted: row.totalTasksCompleted,
-      tasksCompletedToday: row.tasksCompletedToday,
-      tasksCompletedThisWeek: row.tasksCompletedThisWeek,
-      tasksCompletedThisMonth: row.tasksCompletedThisMonth,
-      
-      currentStreak: row.currentStreak,
-      bestStreak: row.bestStreak,
-      lastTaskDate: row.lastTaskDate || undefined,
-      
-      achievementsUnlocked: [], // Se llenará desde AchievementRepository
-      totalAchievements: row.totalAchievements,
-      
-      dailyMissionsCompletedToday: row.dailyMissionsCompletedToday,
-      dailyMissionsStreak: row.dailyMissionsStreak,
-      
-      createdAt: row.createdAt,
-      lastActivity: row.lastActivity,
-    };
-  }
+private static mapRowToUser(row: any): User {
+  return {
+    id: row.id,
+    name: row.name,
+    avatar: row.avatar || undefined,
+    age: row.age || undefined,  // ⭐ NUEVO
+    email: row.email || undefined,  // ⭐ NUEVO
+    
+    totalXP: row.totalXP,
+    currentLevel: row.currentLevel,
+    currentLevelXP: row.currentLevelXP,
+    nextLevelXP: row.nextLevelXP,
+    category: row.category,
+    
+    totalTasksCompleted: row.totalTasksCompleted,
+    tasksCompletedToday: row.tasksCompletedToday,
+    tasksCompletedThisWeek: row.tasksCompletedThisWeek,
+    tasksCompletedThisMonth: row.tasksCompletedThisMonth,
+    
+    currentStreak: row.currentStreak,
+    bestStreak: row.bestStreak,
+    lastTaskDate: row.lastTaskDate || undefined,
+    
+    achievementsUnlocked: [],
+    totalAchievements: row.totalAchievements,
+    
+    dailyMissionsCompletedToday: row.dailyMissionsCompletedToday,
+    dailyMissionsStreak: row.dailyMissionsStreak,
+    
+    createdAt: row.createdAt,
+    lastActivity: row.lastActivity,
+  };
+}
 }

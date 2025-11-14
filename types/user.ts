@@ -10,7 +10,8 @@ export interface User {
   id: number;
   name: string;
   avatar?: string;
-  
+  age?: number;  
+  email?: string;
   // Progreso y Nivel
   totalXP: number;
   currentLevel: number;
@@ -45,11 +46,15 @@ export interface User {
 export interface CreateUserInput {
   name: string;
   avatar?: string;
+  age?: number; 
+  email?: string;
 }
 
 export interface UpdateUserInput {
   name?: string;
   avatar?: string;
+  age?: number; 
+  email?: string;
 }
 
 // Información de nivel y categoría

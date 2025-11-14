@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 30,
     position: 'relative',
+
   },
   gradientContainer: {
     position: 'absolute',
@@ -71,12 +72,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 200,
-    overflow: 'hidden',
+    overflow: 'hidden',    
+    
   },
   gradientTop: {
     width: '100%',
     height: '100%',
     backgroundColor: '#1a1a1a',
+    borderRadius: 18
   },
   avatarContainer: {
     position: 'relative',

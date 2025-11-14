@@ -1,5 +1,5 @@
 import { getDatabase } from './config';
-
+export * from './migrateUserFields';
 /**
  * Crea todas las tablas de la base de datos
  */

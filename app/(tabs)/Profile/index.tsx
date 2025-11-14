@@ -2,6 +2,7 @@ import { useUserStore } from '@/stores/userStore';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EditProfileModal } from '../../../components/modals/EditProfileModal';
 import { ImagePickerSheet } from '../../../components/modals/ImagePickerSheet';
 import { AchievementsSection } from '../../../components/profile/AchievementsSection';
 import { ProfileHeader } from '../../../components/profile/ProfileHeader';
@@ -11,7 +12,7 @@ import { useImagePicker } from '../../../hooks/useImagePicker';
 
 const Profile = () => {
   const insets = useSafeAreaInsets();
-  const { user, achievements, loading, loadUser, updateAvatar } = useUserStore();
+  const { user, achievements, loading, loadUser, updateAvatar, updateUser } = useUserStore();
   
   // Estado para el modal de selección de imagen
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -19,13 +20,14 @@ const Profile = () => {
   // Hook para manejar imágenes
   const { pickFromGallery, pickFromCamera, loading: imageLoading } = useImagePicker();
 
+  const [showEditProfile, setShowEditProfile] = useState(false);
+
   const handleRefresh = async () => {
     await loadUser();
   };
 
   const handleEditProfile = () => {
-    // TODO: Implementar edición de perfil (nombre, etc.)
-    Alert.alert('Editar Perfil', 'Función próximamente disponible');
+    setShowEditProfile(true);
   };
 
   /**
@@ -103,6 +105,15 @@ const Profile = () => {
     Alert.alert('Ver Logros', 'Función próximamente disponible');
   };
 
+  const handleSaveProfile = async (data: { name: string; age?: number; email?: string }) => {
+  try {
+    await updateUser(data);
+    Alert.alert('¡Listo!', 'Tu perfil se actualizó correctamente');
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    Alert.alert('Error', 'No se pudo actualizar el perfil');
+  }
+};
   // Loading state inicial
   if (!user) {
     return (
@@ -167,6 +178,12 @@ const Profile = () => {
         onSelectGallery={handleSelectFromGallery}
         onRemovePhoto={handleRemovePhoto}
         hasCurrentPhoto={!!user.avatar}
+      />
+      <EditProfileModal
+        visible={showEditProfile}
+        user={user}
+        onClose={() => setShowEditProfile(false)}
+        onSave={handleSaveProfile}
       />
 
       {/* Loading Overlay */}
