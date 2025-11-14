@@ -1,4 +1,3 @@
-
 import { Achievement, ACHIEVEMENTS_DEFINITIONS } from '../types/achievement';
 import { Task } from '../types/task';
 import { User } from '../types/user';

@@ -1,23 +1,22 @@
-
 import { create } from 'zustand';
 import {
-    AchievementRepository,
-    StatsRepository,
-    StreakRepository,
-    UserRepository,
+  AchievementRepository,
+  StatsRepository,
+  StreakRepository,
+  UserRepository,
 } from '../database/repositories';
 import { Achievement } from '../types/achievement';
 import { Streak } from '../types/streak';
 import { CreateUserInput, UpdateUserInput, User } from '../types/user';
 import { checkAllAchievements } from '../utils/achievementUtils';
 import {
-    didCategoryChange,
-    didLevelUp,
-    getLevelsGained
+  didCategoryChange,
+  didLevelUp,
+  getLevelsGained
 } from '../utils/levelUtils';
 import {
-    calculateNewStreak,
-    isStreakActive,
+  calculateNewStreak,
+  isStreakActive,
 } from '../utils/streakUtils';
 
 interface UserStore {

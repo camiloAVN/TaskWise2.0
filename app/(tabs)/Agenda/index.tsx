@@ -1,5 +1,3 @@
-// app/(tabs)/Agenda/index.tsx
-
 import { useTaskStore } from '@/stores/taskStore';
 import { useUserStore } from '@/stores/userStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +40,7 @@ export default function AgendaScreen() {
     refreshMonthTasks,
     toggleTask,
     completeTask,
-    deleteTask, // ✅ AGREGAR
+    deleteTask,
   } = useTaskStore();
 
   const {
@@ -53,7 +51,6 @@ export default function AgendaScreen() {
     checkAndUpdateAchievements,
   } = useUserStore();
 
-  // ... código anterior (useEffect, handleMonthChange, etc.)
 
   useEffect(() => {
     const today = new Date();
@@ -193,7 +190,6 @@ export default function AgendaScreen() {
     }
   };
 
-  // ✅ NUEVO: Manejar eliminación de tareas
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
@@ -279,7 +275,7 @@ export default function AgendaScreen() {
           selectedDate={selectedDate}
           onTaskPress={handleEditTask}
           onToggleTask={handleToggleTask}
-          onDeleteTask={handleDeleteTask} // ✅ NUEVO
+          onDeleteTask={handleDeleteTask}
         />
       </ScrollView>
 

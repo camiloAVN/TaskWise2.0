@@ -1,5 +1,3 @@
-// app/(tabs)/Stats/index.tsx
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,7 +30,7 @@ export default function StatsScreen() {
 
   const loading = userLoading || tasksLoading;
 
-  // ✅ Calcular tareas completadas por período
+  // Calcular tareas completadas por período
   const tasksByPeriod = useMemo(() => {
     if (!user) return { today: 0, week: 0, month: 0 };
 
@@ -96,21 +94,21 @@ export default function StatsScreen() {
         setStats(userStats);
       }
 
-      // ✅ Cargar TODAS las tareas del usuario para estadísticas
+      // Cargar TODAS las tareas del usuario para estadísticas
       const allTasks = await TaskRepository.findByUserId(user.id);
       setAllUserTasks(allTasks);
 
-      // ✅ Calcular efectividad con datos reales
+      // Calcular efectividad con datos reales
       calculateEffectiveness(allTasks);
 
-      // ✅ Calcular mejores meses
+      // Calcular mejores meses
       calculateBestMonths(allTasks);
     } catch (error) {
       console.error('Error loading stats:', error);
     }
   };
 
-  // ✅ Calcular efectividad
+  // Calcular efectividad
   const calculateEffectiveness = (allTasks: any[]) => {
     const today = getTodayDate();
     const now = new Date();
@@ -144,7 +142,7 @@ export default function StatsScreen() {
     });
   };
 
-  // ✅ Calcular mejores meses
+  // Calcular mejores meses
   const calculateBestMonths = (allTasks: any[]) => {
     // Agrupar tareas por mes
     const tasksByMonth: { [key: string]: { total: number; completed: number } } = {};

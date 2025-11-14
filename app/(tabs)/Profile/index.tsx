@@ -1,5 +1,3 @@
-// app/(tabs)/Profile/index.tsx
-
 import { useUserStore } from '@/stores/userStore';
 import React from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';

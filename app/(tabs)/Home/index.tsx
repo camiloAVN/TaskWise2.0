@@ -1,5 +1,3 @@
-// app/(tabs)/Home/index.tsx
-
 import { useTaskStore } from '@/stores/taskStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useUserStore } from '@/stores/userStore';
@@ -12,7 +10,7 @@ import { CurrentTaskCard } from '../../../components/home/CurrentTaskCard';
 import { DailyProgressCard } from '../../../components/home/DailyProgressCard';
 import { TaskList } from '../../../components/home/TaskList';
 import { UserHeader } from '../../../components/home/UserHeader';
-import { PomodoroModal } from '../../../components/modals/PomodoroModal'; // ✅ NUEVO
+import { PomodoroModal } from '../../../components/modals/PomodoroModal';
 import { Task } from '../../../types/task';
 import { getTodayDate } from '../../../utils/dateUtils';
 import { calculateTaskPoints } from '../../../utils/xpUtils';
@@ -22,7 +20,7 @@ export default function HomeScreen() {
   const { isAddTaskModalOpen, closeAddTaskModal } = useUIStore();
   
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  const [pomodoroVisible, setPomodoroVisible] = useState(false); // ✅ NUEVO
+  const [pomodoroVisible, setPomodoroVisible] = useState(false); 
   
   const {
     todayTasks,
@@ -42,7 +40,6 @@ export default function HomeScreen() {
     checkAndUpdateAchievements,
   } = useUserStore();
 
-  // ... código anterior (allTodayTasks, completedToday, etc.)
 
   const allTodayTasks = useMemo(() => {
     const today = getTodayDate();
@@ -68,7 +65,6 @@ export default function HomeScreen() {
   const currentTask = allTodayTasks.find(t => !t.completed);
   const upcomingTasks = allTodayTasks.filter(t => !t.completed && t.id !== currentTask?.id);
 
-  // ... handlers anteriores (handleRefresh, handleCompleteTask, etc.)
 
   const handleRefresh = async () => {
     await refreshTasks();
@@ -182,7 +178,7 @@ export default function HomeScreen() {
               handleCompleteTask(currentTask.id);
             }
           }}
-          onPomodoroPress={() => setPomodoroVisible(true)} // ✅ NUEVO
+          onPomodoroPress={() => setPomodoroVisible(true)} 
         />
 
         <DailyProgressCard
@@ -206,7 +202,6 @@ export default function HomeScreen() {
         taskToEdit={taskToEdit}
       />
 
-      {/* ✅ NUEVO: Modal Pomodoro */}
       <PomodoroModal
         visible={pomodoroVisible}
         onClose={() => setPomodoroVisible(false)}

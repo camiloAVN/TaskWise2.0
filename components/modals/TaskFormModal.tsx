@@ -145,7 +145,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     setEstimatedTime('');
   };
 
-  // ✅ Handlers para DateTimePicker
+  // Handlers para DateTimePicker
   const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
     setShowDatePicker(Platform.OS === 'ios'); // En iOS mantener abierto
     if (date) {
@@ -379,7 +379,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
             </View>
           </View>
 
-          {/* ✅ Date & Time con DateTimePicker */}
+          {/* Date & Time con DateTimePicker */}
           <View style={styles.section}>
             <Text style={styles.label}>Fecha y Hora</Text>
 
@@ -673,7 +673,6 @@ const styles = StyleSheet.create({
   priorityTextSelected: {
     color: '#000',
   },
-  // ✅ Estilos para DateTimePicker
   dateTimeButton: {
     flexDirection: 'row',
     alignItems: 'center',

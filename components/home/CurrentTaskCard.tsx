@@ -1,5 +1,3 @@
-// components/home/CurrentTaskCard.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,14 +7,14 @@ interface CurrentTaskCardProps {
   task: Task | null;
   onTaskPress?: () => void;
   onCompletePress?: () => void;
-  onPomodoroPress?: () => void; // ✅ NUEVO
+  onPomodoroPress?: () => void; 
 }
 
 export const CurrentTaskCard: React.FC<CurrentTaskCardProps> = ({
   task,
   onTaskPress,
   onCompletePress,
-  onPomodoroPress, // ✅ NUEVO
+  onPomodoroPress, 
 }) => {
   if (!task) {
     return (
@@ -42,7 +40,7 @@ export const CurrentTaskCard: React.FC<CurrentTaskCardProps> = ({
       <View style={styles.header}>
         <Text style={styles.label}>Tarea Actual</Text>
         <View style={styles.headerRight}>
-          {/* ✅ NUEVO: Botón Pomodoro */}
+          {/* Botón Pomodoro */}
           <TouchableOpacity
             style={styles.pomodoroButton}
             onPress={(e) => {
@@ -130,7 +128,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  // ✅ NUEVO: Botón Pomodoro
   pomodoroButton: {
     flexDirection: 'row',
     alignItems: 'center',

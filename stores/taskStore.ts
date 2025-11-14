@@ -409,7 +409,7 @@ toggleTask: async (id: number) => {
   try {
     const updatedTask = await TaskRepository.toggleCompleted(id);
     
-    // ✅ Actualizar en TODAS las listas inmediatamente
+    // Actualizar en TODAS las listas inmediatamente
     set((state) => {
       // Si se completó, mover a completadas
       if (updatedTask.completed) {

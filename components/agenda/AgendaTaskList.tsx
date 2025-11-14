@@ -1,5 +1,3 @@
-// components/agenda/AgendaTaskList.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -22,7 +20,7 @@ export const AgendaTaskList: React.FC<AgendaTaskListProps> = ({
   onToggleTask,
   onDeleteTask,
 }) => {
-  const [showDeleteButtons, setShowDeleteButtons] = useState(false); // ✅ NUEVO
+  const [showDeleteButtons, setShowDeleteButtons] = useState(false); 
 
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
@@ -69,7 +67,7 @@ export const AgendaTaskList: React.FC<AgendaTaskListProps> = ({
           </Text>
         </View>
 
-        {/* ✅ NUEVO: Botón Toggle */}
+        {/* Botón Toggle */}
         {sortedTasks.length > 0 && (
           <TouchableOpacity
             style={[
@@ -102,13 +100,13 @@ export const AgendaTaskList: React.FC<AgendaTaskListProps> = ({
               task={item}
               onPress={() => onTaskPress(item)}
               onToggle={() => onToggleTask(item.id)}
-              onDelete={showDeleteButtons ? () => handleDeletePress(item) : undefined} // ✅ Solo pasar onDelete si está activo
+              onDelete={showDeleteButtons ? () => handleDeletePress(item) : undefined} // Solo pasar onDelete si está activo
             />
           )}
           keyExtractor={(item) => `task-${item.id}`}
           scrollEnabled={false}
           removeClippedSubviews={false}
-          extraData={[tasks, showDeleteButtons]} // ✅ Agregar showDeleteButtons
+          extraData={[tasks, showDeleteButtons]} //  Agregar showDeleteButtons
         />
       )}
     </View>
@@ -135,7 +133,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  // ✅ NUEVO: Botón toggle
   deleteToggleButton: {
     width: 44,
     height: 44,

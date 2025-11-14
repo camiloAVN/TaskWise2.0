@@ -1,5 +1,3 @@
-// components/modals/PomodoroModal.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -24,10 +22,10 @@ interface PomodoroModalProps {
 
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
 
-// ✅ Obtener dimensiones de la pantalla
+// Obtener dimensiones de la pantalla
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// ✅ Calcular tamaños responsive
+// Calcular tamaños responsive
 const isSmallScreen = SCREEN_HEIGHT < 700;
 const TIMER_SIZE = isSmallScreen ? 220 : 280;
 const TIMER_FONT_SIZE = isSmallScreen ? 52 : 64;
@@ -452,7 +450,7 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 </TouchableOpacity>
               </View>
 
-              {/* ✅ Timer Display con ScrollView */}
+              {/* Timer Display con ScrollView */}
               <ScrollView
                 style={styles.timerScrollView}
                 contentContainerStyle={styles.timerContainer}
@@ -620,7 +618,6 @@ const styles = StyleSheet.create({
   modeButtonTextActive: {
     color: '#000',
   },
-  // ✅ NUEVO: ScrollView para el timer
   timerScrollView: {
     flex: 1,
   },

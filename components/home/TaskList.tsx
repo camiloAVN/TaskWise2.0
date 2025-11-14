@@ -1,5 +1,3 @@
-// components/home/TaskList.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -23,7 +21,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   onDeleteTask,
 }) => {
   const [filter, setFilter] = useState<FilterType>('pending');
-  const [showDeleteButtons, setShowDeleteButtons] = useState(false); // ✅ NUEVO
+  const [showDeleteButtons, setShowDeleteButtons] = useState(false); 
 
   const filteredTasks = useMemo(() => {
     if (filter === 'pending') {
@@ -120,7 +118,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           </View>
         </TouchableOpacity>
 
-        {/* ✅ Botón de Eliminar (solo visible si showDeleteButtons está activo) */}
+
         {showDeleteButtons && (
           <TouchableOpacity
             style={styles.deleteButton}
@@ -140,7 +138,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       <View style={styles.header}>
         <Text style={styles.title}>Tareas</Text>
 
-        {/* ✅ NUEVO: Botón Toggle para mostrar/ocultar botones de eliminar */}
         <TouchableOpacity
           style={[
             styles.deleteToggleButton,
@@ -251,7 +248,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           scrollEnabled={false}
           removeClippedSubviews={false}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          extraData={[allTodayTasks, showDeleteButtons]} // ✅ Agregar showDeleteButtons
+          extraData={[allTodayTasks, showDeleteButtons]} 
         />
       )}
     </View>
@@ -273,7 +270,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
-  // ✅ NUEVO: Botón toggle de eliminar
   deleteToggleButton: {
     flexDirection: 'row',
     alignItems: 'center',

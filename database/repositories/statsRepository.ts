@@ -1,4 +1,3 @@
-
 import { PeriodStats, UserStats } from '../../types/stats';
 import { getDatabase } from '../config';
 

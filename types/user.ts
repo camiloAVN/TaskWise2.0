@@ -1,4 +1,3 @@
-
 export type UserCategory = 
   | 'novato' 
   | 'aprendiz' 

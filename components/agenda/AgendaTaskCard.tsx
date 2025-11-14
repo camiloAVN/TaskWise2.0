@@ -1,5 +1,3 @@
-// components/agenda/AgendaTaskCard.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';

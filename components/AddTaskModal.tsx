@@ -1,9 +1,7 @@
-// components/AddTaskModal.tsx
-
 import { useTaskStore } from '@/stores/taskStore';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { LinearGradient } from 'expo-linear-gradient'; // ✅ Necesitarás instalar esto
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -54,9 +52,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const slideAnim = useRef(new Animated.Value(1000)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
-  // ✅ NUEVO: Estados para mostrar/ocultar indicadores de scroll
   const [showDifficultyIndicator, setShowDifficultyIndicator] = useState(true);
-  const [showPriorityIndicator, setShowPriorityIndicator] = useState(false); // Priority tiene 3, no necesita
   const [showCategoryIndicator, setShowCategoryIndicator] = useState(true);
 
   useEffect(() => {
@@ -168,7 +164,6 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     }
   };
 
-  // ✅ NUEVO: Handler para detectar cuando se llega al final del scroll
   const handleScrollEnd = (
     event: any,
     setIndicator: (value: boolean) => void
@@ -262,7 +257,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               />
             </View>
 
-            {/* ✅ Difficulty con indicador */}
+            {/* Difficulty con indicador */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Dificultad</Text>
@@ -305,7 +300,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                {/* ✅ Gradiente indicador */}
+                {/* Gradiente indicador */}
                 {showDifficultyIndicator && (
                   <LinearGradient
                     colors={['rgba(0,0,0,0)', 'rgba(217,244,52,0.4)']}
@@ -351,7 +346,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </ScrollView>
             </View>
 
-            {/* ✅ Category con indicador */}
+            {/* Category con indicador */}
             <View style={styles.inputGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Categoría</Text>
@@ -391,7 +386,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                {/* ✅ Gradiente indicador */}
+                {/* Gradiente indicador */}
                 {showCategoryIndicator && (
                   <LinearGradient
                     colors={['rgba(0,0,0,0)', 'rgba(217,244,52,0.4)']}
@@ -549,7 +544,6 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: 20,
   },
-  // ✅ NUEVO: Row para label + hint
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -563,7 +557,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  // ✅ NUEVO: Hint de scroll
   scrollHint: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -587,7 +580,6 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingTop: 16,
   },
-  // ✅ NUEVO: Contenedor con gradiente
   horizontalScrollContainer: {
     position: 'relative',
   },
@@ -615,7 +607,6 @@ const styles = StyleSheet.create({
   horizontalOptionTextActive: {
     color: '#000',
   },
-  // ✅ NUEVO: Gradiente en el borde derecho
   scrollGradient: {
     position: 'absolute',
     right: 0,

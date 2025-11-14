@@ -1,4 +1,3 @@
-
 import { STREAK_BONUSES, StreakBonus } from '../types/streak';
 import { daysDifference, getTodayDate, isYesterday } from './dateUtils';
 

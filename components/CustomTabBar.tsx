@@ -1,5 +1,3 @@
-// components/CustomTabBar.tsx
-
 import { Ionicons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import React from 'react';

@@ -1,5 +1,3 @@
-// types/dailyMission.ts
-
 export type MissionType = 
   | 'complete_tasks' 
   | 'complete_by_difficulty' 

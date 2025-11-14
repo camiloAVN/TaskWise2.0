@@ -1,5 +1,3 @@
-// store/uiStore.ts
-
 import { create } from 'zustand';
 
 interface UIStore {

@@ -72,7 +72,7 @@ export interface Stats {
   // Logros
   totalAchievementsUnlocked: number;
   
-  // ✅ Estas propiedades necesitan existir
+
   tasksCompletedToday?: number;
   tasksCompletedThisWeek?: number;
   tasksCompletedThisMonth?: number;
