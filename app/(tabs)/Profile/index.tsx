@@ -1,28 +1,101 @@
 import { useUserStore } from '@/stores/userStore';
-import React from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ImagePickerSheet } from '../../../components/modals/ImagePickerSheet';
 import { AchievementsSection } from '../../../components/profile/AchievementsSection';
 import { ProfileHeader } from '../../../components/profile/ProfileHeader';
 import { ProfileStatsGrid } from '../../../components/profile/ProfileStatsGrid';
 import { UserInfoCard } from '../../../components/profile/UserInfoCard';
+import { useImagePicker } from '../../../hooks/useImagePicker';
 
 const Profile = () => {
   const insets = useSafeAreaInsets();
-  const { user, achievements, loading, loadUser } = useUserStore();
+  const { user, achievements, loading, loadUser, updateAvatar } = useUserStore();
+  
+  // Estado para el modal de selección de imagen
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  
+  // Hook para manejar imágenes
+  const { pickFromGallery, pickFromCamera, loading: imageLoading } = useImagePicker();
 
   const handleRefresh = async () => {
     await loadUser();
   };
 
   const handleEditProfile = () => {
-    // TODO: Implementar edición de perfil
+    // TODO: Implementar edición de perfil (nombre, etc.)
     Alert.alert('Editar Perfil', 'Función próximamente disponible');
   };
 
+  /**
+   * Abrir modal de selección de imagen
+   */
   const handleEditAvatar = () => {
-    // TODO: Implementar cambio de avatar
-    Alert.alert('Cambiar Avatar', 'Función próximamente disponible');
+    setShowImagePicker(true);
+  };
+
+  /**
+   * Seleccionar imagen de la galería
+   */
+  const handleSelectFromGallery = async () => {
+    try {
+      const imageUri = await pickFromGallery(user?.avatar);
+      
+      if (imageUri) {
+        await updateAvatar(imageUri);
+        Alert.alert('¡Listo!', 'Tu foto de perfil se actualizó correctamente');
+      }
+    } catch (error) {
+      console.error('Error selecting from gallery:', error);
+      Alert.alert('Error', 'No se pudo actualizar la foto de perfil');
+    }
+  };
+
+  /**
+   * Tomar foto con la cámara
+   */
+  const handleTakePhoto = async () => {
+    try {
+      const imageUri = await pickFromCamera(user?.avatar);
+      
+      if (imageUri) {
+        await updateAvatar(imageUri);
+        Alert.alert('¡Listo!', 'Tu foto de perfil se actualizó correctamente');
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'No se pudo actualizar la foto de perfil');
+    }
+  };
+
+  /**
+   * Eliminar foto de perfil actual
+   */
+  const handleRemovePhoto = () => {
+    Alert.alert(
+      'Eliminar Foto',
+      '¿Estás seguro de que quieres eliminar tu foto de perfil?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await updateAvatar(null);
+              Alert.alert('¡Listo!', 'Tu foto de perfil se eliminó correctamente');
+            } catch (error) {
+              console.error('Error removing photo:', error);
+              Alert.alert('Error', 'No se pudo eliminar la foto de perfil');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSeeAllAchievements = () => {
@@ -30,10 +103,13 @@ const Profile = () => {
     Alert.alert('Ver Logros', 'Función próximamente disponible');
   };
 
+  // Loading state inicial
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#d9f434" />
+        </View>
       </SafeAreaView>
     );
   }
@@ -82,9 +158,29 @@ const Profile = () => {
           onSeeAll={handleSeeAllAchievements}
         />
       </ScrollView>
+
+      {/* Image Picker Sheet */}
+      <ImagePickerSheet
+        visible={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelectCamera={handleTakePhoto}
+        onSelectGallery={handleSelectFromGallery}
+        onRemovePhoto={handleRemovePhoto}
+        hasCurrentPhoto={!!user.avatar}
+      />
+
+      {/* Loading Overlay */}
+      {imageLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#d9f434" />
+            <Text style={styles.loadingText}> Procesando imagen...</Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
-}
+};
 
 export default Profile;
 
@@ -103,5 +199,29 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBox: {
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 32,
+    paddingVertical: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '600',
   },
 });

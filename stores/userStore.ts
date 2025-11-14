@@ -75,6 +75,8 @@ interface UserStore {
   resetDailyCounters: () => Promise<void>;
   resetWeeklyCounters: () => Promise<void>;
   resetMonthlyCounters: () => Promise<void>;
+
+  updateAvatar: (avatarUri: string | null) => Promise<void>;
   
   // Notificaciones
   dismissLevelUpNotification: () => void;
@@ -156,6 +158,44 @@ export const useUserStore = create<UserStore>((set, get) => ({
       });
     }
   },
+  updateAvatar: async (avatarUri: string | null) => {
+  const user = get().user;
+  if (!user) {
+    throw new Error('No user loaded');
+  }
+  
+  set({ loading: true, error: null });
+  
+  try {
+    // Si se está removiendo el avatar, limpiar imagen anterior
+    if (avatarUri === null && user.avatar) {
+      const { deleteProfileImage } = await import('../utils/imageUtils');
+      await deleteProfileImage(user.avatar);
+    }
+    
+    // Actualizar en la base de datos
+    const updatedUser = await UserRepository.update(user.id, { 
+      avatar: avatarUri || undefined 
+    });
+    
+    // Mantener achievements unlocked
+    updatedUser.achievementsUnlocked = user.achievementsUnlocked;
+    
+    set({ user: updatedUser, loading: false });
+    
+    console.log('✅ Avatar updated');
+  } catch (error) {
+    console.error('❌ Error updating avatar:', error);
+    set({ 
+      error: error instanceof Error ? error.message : 'Error al actualizar avatar',
+      loading: false,
+    });
+    throw error;
+  }
+},
+
+
+
   
   /**
    * Crear nuevo usuario

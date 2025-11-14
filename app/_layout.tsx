@@ -7,7 +7,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../global.css';
 
-
+import { initializeImageDirectory } from '@/utils/imageUtils';
 
 const _layout = () => {
   const [dbInitialized, setDbInitialized] = useState(false);
@@ -29,6 +29,8 @@ const _layout = () => {
         
         // Seed inicial
         await seedInitialData();
+
+        await initializeImageDirectory();
         
         // Verificar salud de la DB
         const health = await checkDatabaseHealth();
