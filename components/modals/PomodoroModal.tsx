@@ -1,15 +1,18 @@
+// components/modals/PomodoroModal.tsx
 
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Animated,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Animated,
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,6 +23,15 @@ interface PomodoroModalProps {
 }
 
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
+
+// ✅ Obtener dimensiones de la pantalla
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// ✅ Calcular tamaños responsive
+const isSmallScreen = SCREEN_HEIGHT < 700;
+const TIMER_SIZE = isSmallScreen ? 220 : 280;
+const TIMER_FONT_SIZE = isSmallScreen ? 52 : 64;
+const POMODORO_COUNT_SIZE = isSmallScreen ? 24 : 32;
 
 export const PomodoroModal: React.FC<PomodoroModalProps> = ({
   visible,
@@ -34,13 +46,13 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [showSettings, setShowSettings] = useState(false);
 
-  // ✅ Configuraciones como números (valores reales)
+  // Configuraciones personalizables
   const [workDuration, setWorkDuration] = useState(25);
   const [shortBreakDuration, setShortBreakDuration] = useState(5);
   const [longBreakDuration, setLongBreakDuration] = useState(15);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
 
-  // ✅ NUEVO: Estados temporales como strings (para los inputs)
+  // Estados temporales para inputs
   const [workDurationInput, setWorkDurationInput] = useState('25');
   const [shortBreakDurationInput, setShortBreakDurationInput] = useState('5');
   const [longBreakDurationInput, setLongBreakDurationInput] = useState('15');
@@ -113,7 +125,7 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
     }
   }, [visible]);
 
-  // ✅ NUEVO: Sincronizar inputs con valores cuando se abre settings
+  // Sincronizar inputs con valores cuando se abre settings
   useEffect(() => {
     if (showSettings) {
       setWorkDurationInput(workDuration.toString());
@@ -210,29 +222,23 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
     }
   };
 
-  // ✅ NUEVO: Validar y guardar configuración
   const handleSaveSettings = () => {
-    // Parsear valores o usar defaults si están vacíos
     const newWorkDuration = parseInt(workDurationInput) || 25;
     const newShortBreak = parseInt(shortBreakDurationInput) || 5;
     const newLongBreak = parseInt(longBreakDurationInput) || 15;
 
-    // Validar rangos (mínimo 1 minuto, máximo 120 minutos)
     const validWorkDuration = Math.max(1, Math.min(120, newWorkDuration));
     const validShortBreak = Math.max(1, Math.min(60, newShortBreak));
     const validLongBreak = Math.max(1, Math.min(120, newLongBreak));
 
-    // Guardar valores validados
     setWorkDuration(validWorkDuration);
     setShortBreakDuration(validShortBreak);
     setLongBreakDuration(validLongBreak);
 
-    // Actualizar inputs con valores validados
     setWorkDurationInput(validWorkDuration.toString());
     setShortBreakDurationInput(validShortBreak.toString());
     setLongBreakDurationInput(validLongBreak.toString());
 
-    // Actualizar el timer según el modo actual
     handleModeChange(mode);
     setShowSettings(false);
   };
@@ -333,10 +339,9 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
 
           {/* Settings Panel */}
           {showSettings ? (
-            <View style={styles.settingsPanel}>
+            <ScrollView style={styles.settingsPanel} showsVerticalScrollIndicator={false}>
               <Text style={styles.settingsTitle}>⚙️ Configuración</Text>
 
-              {/* ✅ Work Duration Input */}
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Tiempo de Trabajo (min)</Text>
                 <TextInput
@@ -350,7 +355,6 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 />
               </View>
 
-              {/* ✅ Short Break Input */}
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Descanso Corto (min)</Text>
                 <TextInput
@@ -364,7 +368,6 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 />
               </View>
 
-              {/* ✅ Long Break Input */}
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Descanso Largo (min)</Text>
                 <TextInput
@@ -386,11 +389,10 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 <Text style={styles.saveButtonText}>Guardar Configuración</Text>
               </TouchableOpacity>
 
-              {/* ✅ NUEVO: Hint de validación */}
               <Text style={styles.hint}>
                 Valores válidos: 1-120 min para trabajo, 1-60 min para descansos
               </Text>
-            </View>
+            </ScrollView>
           ) : (
             <>
               {/* Mode Selector */}
@@ -450,25 +452,30 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 </TouchableOpacity>
               </View>
 
-              {/* Timer Display */}
-              <View style={styles.timerContainer}>
+              {/* ✅ Timer Display con ScrollView */}
+              <ScrollView
+                style={styles.timerScrollView}
+                contentContainerStyle={styles.timerContainer}
+                showsVerticalScrollIndicator={false}
+              >
                 <Text style={styles.modeLabel}>{getModeLabel()}</Text>
 
                 {/* Circular Progress */}
-                <View style={styles.circularProgress}>
-                  <View style={styles.progressBackground}>
+                <View style={[styles.circularProgress, { width: TIMER_SIZE, height: TIMER_SIZE }]}>
+                  <View style={[styles.progressBackground, { width: TIMER_SIZE, height: TIMER_SIZE, borderRadius: TIMER_SIZE / 2 }]}>
                     <View
                       style={[
                         styles.progressFill,
                         {
                           height: `${getProgress()}%`,
                           backgroundColor: getModeColor(),
+                          borderRadius: TIMER_SIZE / 2,
                         },
                       ]}
                     />
                   </View>
                   <Text
-                    style={[styles.timerText, { color: getModeColor() }]}
+                    style={[styles.timerText, { color: getModeColor(), fontSize: TIMER_FONT_SIZE }]}
                   >
                     {formatTime(timeLeft)}
                   </Text>
@@ -477,9 +484,11 @@ export const PomodoroModal: React.FC<PomodoroModalProps> = ({
                 {/* Pomodoros Completed */}
                 <View style={styles.pomodorosContainer}>
                   <Text style={styles.pomodorosLabel}>Pomodoros Completados</Text>
-                  <Text style={styles.pomodorosCount}>{pomodorosCompleted}</Text>
+                  <Text style={[styles.pomodorosCount, { fontSize: POMODORO_COUNT_SIZE }]}>
+                    {pomodorosCompleted}
+                  </Text>
                 </View>
-              </View>
+              </ScrollView>
 
               {/* Controls */}
               <View style={styles.controls}>
@@ -611,30 +620,29 @@ const styles = StyleSheet.create({
   modeButtonTextActive: {
     color: '#000',
   },
-  timerContainer: {
+  // ✅ NUEVO: ScrollView para el timer
+  timerScrollView: {
     flex: 1,
+  },
+  timerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: isSmallScreen ? 20 : 40,
+    minHeight: isSmallScreen ? 400 : 500,
   },
   modeLabel: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 40,
+    marginBottom: isSmallScreen ? 20 : 40,
   },
   circularProgress: {
-    width: 280,
-    height: 280,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
+    marginBottom: isSmallScreen ? 20 : 40,
   },
   progressBackground: {
     position: 'absolute',
-    width: 280,
-    height: 280,
-    borderRadius: 140,
     backgroundColor: '#1a1a1a',
     overflow: 'hidden',
     borderWidth: 8,
@@ -645,10 +653,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    borderRadius: 140,
   },
   timerText: {
-    fontSize: 64,
     fontWeight: 'bold',
     fontVariant: ['tabular-nums'],
   },
@@ -662,7 +668,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pomodorosCount: {
-    fontSize: 32,
     fontWeight: 'bold',
     color: '#d9f434',
   },
@@ -743,7 +748,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  // ✅ NUEVO: Hint text
   hint: {
     fontSize: 12,
     color: '#666',
