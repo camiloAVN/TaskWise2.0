@@ -1,5 +1,6 @@
 import { getDatabase } from './config';
 export * from './migrateUserFields';
+export * from './migrateNotificationFields';
 /**
  * Crea todas las tablas de la base de datos
  */
@@ -77,7 +78,11 @@ export const initDatabase = async (): Promise<void> => {
         completedEarly INTEGER DEFAULT 0,
         isFirstTaskOfDay INTEGER DEFAULT 0,
         completedDuringStreak INTEGER DEFAULT 0,
-        
+
+        -- Notificaciones
+        hasReminder INTEGER DEFAULT 0,
+        notificationId TEXT,
+
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       );
     `);

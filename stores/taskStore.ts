@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { TaskRepository } from '../database/repositories/taskRepository';
 import { CreateTaskInput, Task, UpdateTaskInput } from '../types/task';
 import { getTodayDate } from '../utils/dateUtils';
+import { scheduleTaskNotification, cancelTaskNotification } from '../utils/notificationUtils';
 
 interface TaskStore {
   // ==================== ESTADO ====================
@@ -266,14 +267,30 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     if (!userId) {
       throw new Error('No user ID set');
     }
-    
+
     set({ loading: true, error: null });
-    
+
     try {
       const newTask = await TaskRepository.create(userId, input);
-      
+
+      // Programar notificación si es necesario
+      if (newTask.hasReminder && newTask.dueDate && newTask.dueTime) {
+        const notificationId = await scheduleTaskNotification(
+          newTask.id,
+          newTask.title,
+          newTask.dueDate,
+          newTask.dueTime
+        );
+
+        if (notificationId) {
+          await TaskRepository.updateNotificationId(newTask.id, notificationId);
+          newTask.notificationId = notificationId;
+          console.log('🔔 Notification scheduled:', notificationId);
+        }
+      }
+
       const today = getTodayDate();
-      
+
       // Agregar a la lista correspondiente
       if (input.dueDate === today) {
         set((state) => ({
@@ -286,12 +303,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           loading: false,
         }));
       }
-      
+
       console.log('✅ Task created:', newTask.id);
       return newTask;
     } catch (error) {
       console.error('❌ Error creating task:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Error al crear tarea',
         loading: false,
       });
@@ -304,10 +321,44 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    */
   updateTask: async (id: number, input: UpdateTaskInput) => {
     set({ loading: true, error: null });
-    
+
     try {
+      const oldTask = get().getTaskById(id);
       const updatedTask = await TaskRepository.update(id, input);
-      
+
+      // Manejar cambios en notificaciones
+      const hasDateTimeChanged =
+        (input.dueDate !== undefined && input.dueDate !== oldTask?.dueDate) ||
+        (input.dueTime !== undefined && input.dueTime !== oldTask?.dueTime);
+
+      const hasReminderChanged =
+        input.hasReminder !== undefined && input.hasReminder !== oldTask?.hasReminder;
+
+      // Si hay cambios en recordatorio o fecha/hora, reprogramar
+      if (hasReminderChanged || hasDateTimeChanged) {
+        // Cancelar notificación anterior si existe
+        if (oldTask?.notificationId) {
+          await cancelTaskNotification(oldTask.notificationId);
+          await TaskRepository.updateNotificationId(id, null);
+        }
+
+        // Programar nueva notificación si es necesario
+        if (updatedTask.hasReminder && updatedTask.dueDate && updatedTask.dueTime) {
+          const notificationId = await scheduleTaskNotification(
+            updatedTask.id,
+            updatedTask.title,
+            updatedTask.dueDate,
+            updatedTask.dueTime
+          );
+
+          if (notificationId) {
+            await TaskRepository.updateNotificationId(updatedTask.id, notificationId);
+            updatedTask.notificationId = notificationId;
+            console.log('🔔 Notification rescheduled:', notificationId);
+          }
+        }
+      }
+
       // Actualizar en todas las listas donde pueda estar
       set((state) => ({
         pendingTasks: state.pendingTasks.map(t => t.id === id ? updatedTask : t),
@@ -315,12 +366,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         recentCompleted: state.recentCompleted.map(t => t.id === id ? updatedTask : t),
         loading: false,
       }));
-      
+
       console.log('✅ Task updated:', id);
       return updatedTask;
     } catch (error) {
       console.error('❌ Error updating task:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Error al actualizar tarea',
         loading: false,
       });
@@ -333,10 +384,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    */
   deleteTask: async (id: number) => {
     set({ loading: true, error: null });
-    
+
     try {
+      const task = get().getTaskById(id);
+
+      // Cancelar notificación si existe
+      if (task?.notificationId) {
+        await cancelTaskNotification(task.notificationId);
+        console.log('🔕 Notification cancelled for deleted task:', id);
+      }
+
       await TaskRepository.delete(id);
-      
+
       // Remover de todas las listas
       set((state) => ({
         pendingTasks: state.pendingTasks.filter(t => t.id !== id),
@@ -344,11 +403,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         recentCompleted: state.recentCompleted.filter(t => t.id !== id),
         loading: false,
       }));
-      
+
       console.log('✅ Task deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting task:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'Error al eliminar tarea',
         loading: false,
       });
@@ -372,27 +431,35 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     }
   ) => {
     try {
+      const task = get().getTaskById(id);
+
+      // Cancelar notificación si existe
+      if (task?.notificationId) {
+        await cancelTaskNotification(task.notificationId);
+        console.log('🔕 Notification cancelled for completed task:', id);
+      }
+
       const completedTask = await TaskRepository.complete(
         id,
         earnedPoints,
         bonusMultiplier,
         flags
       );
-      
+
       // Remover de listas activas y agregar a completadas
       set((state) => {
         const newRecentCompleted = [
           completedTask,
           ...state.recentCompleted.slice(0, state.MAX_RECENT_COMPLETED - 1),
         ];
-        
+
         return {
           pendingTasks: state.pendingTasks.filter(t => t.id !== id),
           todayTasks: state.todayTasks.filter(t => t.id !== id),
           recentCompleted: newRecentCompleted,
         };
       });
-      
+
       console.log(`✅ Task completed: ${id} (+${earnedPoints} XP)`);
       return completedTask;
     } catch (error) {

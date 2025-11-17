@@ -44,6 +44,10 @@ export interface Task {
   completedEarly: boolean; // Completada antes de tiempo
   isFirstTaskOfDay: boolean; // Primera tarea del día
   completedDuringStreak: boolean; // Completada durante racha activa
+
+  // Notificaciones
+  hasReminder: boolean; // Si tiene recordatorio programado
+  notificationId?: string; // ID de la notificación programada
 }
 
 export interface CreateTaskInput {
@@ -55,6 +59,7 @@ export interface CreateTaskInput {
   dueDate?: string; // 'YYYY-MM-DD'
   dueTime?: string; // 'HH:mm'
   estimatedTime?: number;
+  hasReminder?: boolean; // Si debe programar recordatorio
 }
 
 export interface UpdateTaskInput {
@@ -67,6 +72,7 @@ export interface UpdateTaskInput {
   dueDate?: string;
   dueTime?: string;
   estimatedTime?: number;
+  hasReminder?: boolean;
 }
 
 // Información de puntos por dificultad

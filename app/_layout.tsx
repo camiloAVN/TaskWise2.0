@@ -1,6 +1,8 @@
 import { migrateAddUserFields } from '@/database/migrateUserFields';
+import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
 import { initializeImageDirectory } from '@/utils/imageUtils';
+import { configureNotifications } from '@/utils/notificationUtils';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -49,19 +51,25 @@ const _layout = () => {
     const setupDatabase = async () => {
       try {
         console.log('🔄 Initializing database...');
-        
+
         await initDatabase();
         await migrateAddUserFields();
+        await migrateAddNotificationFields();
         await seedInitialData();
         await initializeImageDirectory();
-        
+
         const health = await checkDatabaseHealth();
         console.log('📊 Database health:', health);
-        
+
         if (!health.isHealthy) {
           throw new Error('Database health check failed');
         }
-        
+
+        // Configurar notificaciones
+        console.log('🔔 Configuring notifications...');
+        await configureNotifications();
+        console.log('✅ Notifications configured');
+
         setDbInitialized(true);
         console.log('✅ Database ready');
       } catch (error) {

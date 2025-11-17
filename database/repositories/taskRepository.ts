@@ -17,8 +17,8 @@ export class TaskRepository {
         `INSERT INTO tasks (
           userId, title, description, difficulty, category, priority,
           basePoints, dueDate, dueTime, estimatedTime, status,
-          createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          hasReminder, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           input.title,
@@ -31,6 +31,7 @@ export class TaskRepository {
           input.dueTime || null,
           input.estimatedTime || null,
           'pending',
+          input.hasReminder ? 1 : 0,
           now,
           now,
         ]
@@ -304,6 +305,10 @@ export class TaskRepository {
         fields.push('estimatedTime = ?');
         values.push(input.estimatedTime);
       }
+      if (input.hasReminder !== undefined) {
+        fields.push('hasReminder = ?');
+        values.push(input.hasReminder ? 1 : 0);
+      }
 
       fields.push('updatedAt = ?');
       values.push(now);
@@ -429,6 +434,26 @@ static async toggleCompleted(id: number): Promise<Task> {
 }
 
   /**
+   * Actualizar notificationId de una tarea
+   */
+  static async updateNotificationId(id: number, notificationId: string | null): Promise<void> {
+    try {
+      const db = await getDatabase();
+      const now = new Date().toISOString();
+
+      await db.runAsync(
+        `UPDATE tasks SET notificationId = ?, updatedAt = ? WHERE id = ?`,
+        [notificationId, now, id]
+      );
+
+      console.log('✅ Task notificationId updated:', id, notificationId);
+    } catch (error) {
+      console.error('❌ Error updating notificationId:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Eliminar tarea
    */
   static async delete(id: number): Promise<void> {
@@ -469,25 +494,28 @@ static async toggleCompleted(id: number): Promise<Task> {
       description: row.description || undefined,
       completed: row.completed === 1,
       status: row.status,
-      
+
       difficulty: row.difficulty,
       category: row.category,
       priority: row.priority,
       basePoints: row.basePoints,
       bonusMultiplier: row.bonusMultiplier,
       earnedPoints: row.earnedPoints,
-      
+
       dueDate: row.dueDate || undefined,
       dueTime: row.dueTime || undefined,
       estimatedTime: row.estimatedTime || undefined,
-      
+
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       completedAt: row.completedAt || undefined,
-      
+
       completedEarly: row.completedEarly === 1,
       isFirstTaskOfDay: row.isFirstTaskOfDay === 1,
       completedDuringStreak: row.completedDuringStreak === 1,
+
+      hasReminder: row.hasReminder === 1,
+      notificationId: row.notificationId || undefined,
     };
   }
 }

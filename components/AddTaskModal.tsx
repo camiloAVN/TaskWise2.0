@@ -42,6 +42,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [dueDate, setDueDate] = useState(getTodayDate());
   const [dueTime, setDueTime] = useState('');
   const [estimatedTime, setEstimatedTime] = useState('');
+  const [hasReminder, setHasReminder] = useState(false);
 
   // Date picker
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -66,6 +67,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         setDueDate(taskToEdit.dueDate || getTodayDate());
         setDueTime(taskToEdit.dueTime || '');
         setEstimatedTime(taskToEdit.estimatedTime?.toString() || '');
+        setHasReminder(taskToEdit.hasReminder || false);
       } else {
         resetForm();
       }
@@ -112,6 +114,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setDueDate(getTodayDate());
     setDueTime('');
     setEstimatedTime('');
+    setHasReminder(false);
   };
 
   const handleSave = async () => {
@@ -130,6 +133,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
         dueDate: dueDate || undefined,
         dueTime: dueTime || undefined,
         estimatedTime: estimatedTime ? parseInt(estimatedTime) : undefined,
+        hasReminder: hasReminder && !!dueDate && !!dueTime, // Solo si hay fecha y hora
       };
 
       if (taskToEdit) {
@@ -428,6 +432,37 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </View>
             </View>
 
+            {/* Reminder Checkbox */}
+            <TouchableOpacity
+              style={styles.reminderContainer}
+              onPress={() => setHasReminder(!hasReminder)}
+              activeOpacity={0.7}
+              disabled={!dueDate || !dueTime}
+            >
+              <View style={[
+                styles.checkbox,
+                hasReminder && styles.checkboxActive,
+                (!dueDate || !dueTime) && styles.checkboxDisabled
+              ]}>
+                {hasReminder && (
+                  <Ionicons name="checkmark" size={18} color="#000" />
+                )}
+              </View>
+              <View style={styles.reminderTextContainer}>
+                <Text style={[
+                  styles.reminderLabel,
+                  (!dueDate || !dueTime) && styles.reminderLabelDisabled
+                ]}>
+                  🔔 Recordatorio
+                </Text>
+                <Text style={styles.reminderHint}>
+                  {!dueDate || !dueTime
+                    ? 'Requiere fecha y hora'
+                    : 'Te notificaremos a la hora programada'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
             {/* Estimated Time */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Tiempo Estimado (minutos)</Text>
@@ -657,5 +692,51 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+  },
+  reminderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#666',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  checkboxActive: {
+    backgroundColor: '#d9f434',
+    borderColor: '#d9f434',
+  },
+  checkboxDisabled: {
+    borderColor: '#333',
+    opacity: 0.5,
+  },
+  reminderTextContainer: {
+    flex: 1,
+  },
+  reminderLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  reminderLabelDisabled: {
+    color: '#666',
+  },
+  reminderHint: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
