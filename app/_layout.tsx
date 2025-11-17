@@ -1,12 +1,14 @@
 import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { initializeImageDirectory } from '@/utils/imageUtils';
 import { configureNotifications } from '@/utils/notificationUtils';
+import * as Notifications from 'expo-notifications';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native'; // ⭐ Agregar AppState
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../global.css';
@@ -14,6 +16,9 @@ import '../global.css';
 const _layout = () => {
   const [dbInitialized, setDbInitialized] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
+  const { addNotification } = useNotificationStore();
 
   // ⭐ AGREGAR: Listener para forzar ocultar barra cuando la app vuelve
   useEffect(() => {
@@ -80,6 +85,70 @@ const _layout = () => {
 
     setupDatabase();
   }, []);
+
+  // Configurar listener de notificaciones recibidas
+  useEffect(() => {
+    if (!dbInitialized) return;
+
+    // Listener para cuando se recibe una notificación (app en foreground)
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      async (notification) => {
+        console.log('🔔 Notification received:', notification);
+
+        const { taskId, taskTitle } = notification.request.content.data as {
+          taskId: number;
+          taskTitle?: string;
+        };
+
+        if (taskId && taskTitle) {
+          try {
+            await addNotification({
+              taskId,
+              taskTitle,
+              type: 'task_reminder',
+            });
+            console.log('✅ Notification saved to store');
+          } catch (error) {
+            console.error('❌ Error saving notification:', error);
+          }
+        }
+      }
+    );
+
+    // Listener para cuando el usuario toca la notificación
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      async (response) => {
+        console.log('👆 Notification tapped:', response);
+
+        const { taskId, taskTitle } = response.notification.request.content.data as {
+          taskId: number;
+          taskTitle?: string;
+        };
+
+        if (taskId && taskTitle) {
+          try {
+            await addNotification({
+              taskId,
+              taskTitle,
+              type: 'task_reminder',
+            });
+            console.log('✅ Notification saved to store (from tap)');
+          } catch (error) {
+            console.error('❌ Error saving notification:', error);
+          }
+        }
+      }
+    );
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, [dbInitialized]);
 
   if (dbError) {
     return (

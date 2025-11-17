@@ -6,9 +6,16 @@ import { User } from '../../types/user';
 interface UserHeaderProps {
   user: User;
   onProfilePress?: () => void;
+  onNotificationsPress?: () => void;
+  unreadCount?: number;
 }
 
-export const UserHeader: React.FC<UserHeaderProps> = ({ user, onProfilePress }) => {
+export const UserHeader: React.FC<UserHeaderProps> = ({
+  user,
+  onProfilePress,
+  onNotificationsPress,
+  unreadCount = 0,
+}) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity 
@@ -33,8 +40,19 @@ export const UserHeader: React.FC<UserHeaderProps> = ({ user, onProfilePress }) 
       </TouchableOpacity>
       
       {/* Notifications/Settings */}
-      <TouchableOpacity style={styles.iconButton}>
+      <TouchableOpacity
+        style={styles.iconButton}
+        onPress={onNotificationsPress}
+        activeOpacity={0.7}
+      >
         <Ionicons name="notifications-outline" size={24} color="#fff" />
+        {unreadCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -85,5 +103,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 20,
     backgroundColor: '#1a1a1a',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

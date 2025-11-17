@@ -179,6 +179,22 @@ export const initDatabase = async (): Promise<void> => {
       );
     `);
 
+    // ==================== TABLA: received_notifications ====================
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS received_notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER NOT NULL,
+        taskId INTEGER NOT NULL,
+        taskTitle TEXT NOT NULL,
+        type TEXT NOT NULL,
+        receivedAt TEXT NOT NULL,
+        read INTEGER DEFAULT 0,
+        readAt TEXT,
+
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      );
+    `);
+
     // ==================== TABLA: stats ====================
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS stats (
@@ -303,8 +319,19 @@ export const initDatabase = async (): Promise<void> => {
 
     // Streaks
     await db.execAsync(`
-      CREATE INDEX IF NOT EXISTS idx_streaks_userId 
+      CREATE INDEX IF NOT EXISTS idx_streaks_userId
       ON streaks(userId);
+    `);
+
+    // Received Notifications
+    await db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_notifications_userId
+      ON received_notifications(userId);
+    `);
+
+    await db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_notifications_read
+      ON received_notifications(read);
     `);
 
     console.log('✅ Database tables and indexes created successfully');

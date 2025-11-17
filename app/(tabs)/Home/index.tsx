@@ -1,8 +1,9 @@
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useUserStore } from '@/stores/userStore';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AddTaskModal } from '../../../components/AddTaskModal';
@@ -10,6 +11,7 @@ import { CurrentTaskCard } from '../../../components/home/CurrentTaskCard';
 import { DailyProgressCard } from '../../../components/home/DailyProgressCard';
 import { TaskList } from '../../../components/home/TaskList';
 import { UserHeader } from '../../../components/home/UserHeader';
+import { NotificationsModal } from '../../../components/modals/NotificationsModal';
 import { PomodoroModal } from '../../../components/modals/PomodoroModal';
 import { Task } from '../../../types/task';
 import { getTodayDate } from '../../../utils/dateUtils';
@@ -20,7 +22,8 @@ export default function HomeScreen() {
   const { isAddTaskModalOpen, closeAddTaskModal } = useUIStore();
   
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  const [pomodoroVisible, setPomodoroVisible] = useState(false); 
+  const [pomodoroVisible, setPomodoroVisible] = useState(false);
+  const [notificationsModalVisible, setNotificationsModalVisible] = useState(false); 
   
   const {
     todayTasks,
@@ -39,6 +42,8 @@ export default function HomeScreen() {
     updateStreak,
     checkAndUpdateAchievements,
   } = useUserStore();
+
+  const { unreadCount, loadNotifications, loadUnreadCount } = useNotificationStore();
 
 
   const allTodayTasks = useMemo(() => {
@@ -65,9 +70,26 @@ export default function HomeScreen() {
   const currentTask = allTodayTasks.find(t => !t.completed);
   const upcomingTasks = allTodayTasks.filter(t => !t.completed && t.id !== currentTask?.id);
 
+  // Load notifications on mount
+  useEffect(() => {
+    loadNotifications();
+    loadUnreadCount();
+  }, []);
+
 
   const handleRefresh = async () => {
     await refreshTasks();
+    await loadNotifications();
+    await loadUnreadCount();
+  };
+
+  const handleOpenNotifications = () => {
+    setNotificationsModalVisible(true);
+  };
+
+  const handleCloseNotifications = () => {
+    setNotificationsModalVisible(false);
+    loadUnreadCount(); // Refresh badge after closing
   };
 
   const handleCompleteTask = async (taskId: number) => {
@@ -164,6 +186,8 @@ export default function HomeScreen() {
         <UserHeader
           user={user}
           onProfilePress={() => router.push('/(tabs)/Profile')}
+          onNotificationsPress={handleOpenNotifications}
+          unreadCount={unreadCount}
         />
 
         <CurrentTaskCard
@@ -206,6 +230,11 @@ export default function HomeScreen() {
         visible={pomodoroVisible}
         onClose={() => setPomodoroVisible(false)}
         taskTitle={currentTask?.title}
+      />
+
+      <NotificationsModal
+        visible={notificationsModalVisible}
+        onClose={handleCloseNotifications}
       />
     </SafeAreaView>
   );

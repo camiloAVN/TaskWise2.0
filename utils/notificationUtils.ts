@@ -92,7 +92,7 @@ export const scheduleTaskNotification = async (
       content: {
         title: '⏰ Recordatorio de Tarea',
         body: title,
-        data: { taskId },
+        data: { taskId, taskTitle: title },
         sound: true,
         priority: Notifications.AndroidNotificationPriority.HIGH,
         color: '#d9f434',

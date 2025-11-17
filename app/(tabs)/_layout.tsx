@@ -1,4 +1,5 @@
 import { CustomTabBar } from '@/components/CustomTabBar';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useTaskStore } from '@/stores/taskStore';
 import { useUserStore } from '@/stores/userStore';
 import { Tabs } from 'expo-router';
@@ -13,6 +14,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 const _layout = () => {
   const { setUserId, loadEssentialTasks, loadRecentCompleted } = useTaskStore();
   const { loadUser } = useUserStore();
+  const { setUserId: setNotificationUserId, loadNotifications, loadUnreadCount } =
+    useNotificationStore();
 
   useEffect(() => {
     const initializeStores = async () => {
@@ -33,8 +36,11 @@ const _layout = () => {
         
         if (user) {
           setUserId(user.id);
+          setNotificationUserId(user.id);
           await loadEssentialTasks();
           await loadRecentCompleted();
+          await loadNotifications();
+          await loadUnreadCount();
           console.log('✅ Stores initialized');
         }
       } catch (error) {
