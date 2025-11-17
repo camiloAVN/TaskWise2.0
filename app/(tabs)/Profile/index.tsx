@@ -1,6 +1,6 @@
 import { useUserStore } from '@/stores/userStore';
-import React, { useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EditProfileModal } from '../../../components/modals/EditProfileModal';
 import { ImagePickerSheet } from '../../../components/modals/ImagePickerSheet';
@@ -13,6 +13,16 @@ import { useImagePicker } from '../../../hooks/useImagePicker';
 const Profile = () => {
   const insets = useSafeAreaInsets();
   const { user, achievements, loading, loadUser, updateAvatar, updateUser } = useUserStore();
+  useEffect(() => {
+  console.log('🖼️ Profile Screen - Insets changed:', insets);
+}, [insets]);
+
+useEffect(() => {
+  console.log('📱 Profile Screen - Mounted');
+  return () => {
+    console.log('📱 Profile Screen - Unmounted');
+  };
+}, []);
   
   // Estado para el modal de selección de imagen
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -42,6 +52,7 @@ const Profile = () => {
    */
   const handleSelectFromGallery = async () => {
     try {
+      Keyboard.dismiss();
       const imageUri = await pickFromGallery(user?.avatar);
       
       if (imageUri) {
@@ -59,6 +70,7 @@ const Profile = () => {
    */
   const handleTakePhoto = async () => {
     try {
+      Keyboard.dismiss();
       const imageUri = await pickFromCamera(user?.avatar);
       
       if (imageUri) {
@@ -131,10 +143,7 @@ const Profile = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 100 },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -216,6 +225,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingBottom: 120
   },
   loadingOverlay: {
     position: 'absolute',

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUIStore } from '../stores/uiStore';
 import { AddTaskModal } from './AddTaskModal';
 
@@ -24,10 +23,9 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
   descriptors,
   navigation,
 }) => {
-  const insets = useSafeAreaInsets();
+
   const { isAddTaskModalOpen, openAddTaskModal, closeAddTaskModal } = useUIStore();
 
-  // Función para limpiar el nombre de la ruta (quita /index)
   const getCleanRouteName = (routeName: string): string => {
     return routeName.replace('/index', '');
   };
@@ -49,88 +47,86 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
     }
   };
 
-  // Define el orden de los tabs (ahora con /index)
   const tabOrder = ['Home/index', 'Stats/index', 'add', 'Agenda/index', 'Profile/index'];
 
   return (
     <>
-        <View style={[styles.container, { paddingBottom: insets.bottom + 10 }]}>
-            <View style={styles.tabBar}>
-                {tabOrder.map((tabName) => {
-                // Botón central ADD
-                if (tabName === 'add') {
-                    return (
-                    <View key="add-button" style={styles.centerButtonContainer}>
-                        <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={openAddTaskModal}
-                        activeOpacity={0.8}
-                        >
-                        <Ionicons name="add" size={32} color="#000" />
-                        </TouchableOpacity>
-                    </View>
-                    );
-                }
+      <View 
+        style={styles.container}  
+      >
+        <View style={styles.tabBar}>
+          {tabOrder.map((tabName) => {
+            if (tabName === 'add') {
+              return (
+                <View key="add-button" style={styles.centerButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={openAddTaskModal}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="add" size={32} color="#000" />
+                  </TouchableOpacity>
+                </View>
+              );
+            }
 
-                // Encuentra la ruta correspondiente
-                const route = state.routes.find((r) => r.name === tabName);
-                
-                if (!route) {
-                    console.warn(`Route ${tabName} not found`);
-                    return null;
-                }
+            const route = state.routes.find((r) => r.name === tabName);
+            
+            if (!route) {
+              console.warn(`Route ${tabName} not found`);
+              return null;
+            }
 
-                const routeIndex = state.routes.indexOf(route);
-                const isFocused = state.index === routeIndex;
-                const { options } = descriptors[route.key];
+            const routeIndex = state.routes.indexOf(route);
+            const isFocused = state.index === routeIndex;
+            const { options } = descriptors[route.key];
 
-                const onPress = () => {
-                    const event = navigation.emit({
-                    type: 'tabPress',
-                    target: route.key,
-                    canPreventDefault: true,
-                    });
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-                    if (!isFocused && !event.defaultPrevented) {
-                    navigation.navigate(route.name);
-                    }
-                };
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-                const onLongPress = () => {
-                    navigation.emit({
-                    type: 'tabLongPress',
-                    target: route.key,
-                    });
-                };
+            const onLongPress = () => {
+              navigation.emit({
+                type: 'tabLongPress',
+                target: route.key,
+              });
+            };
 
-                return (
-                    <TouchableOpacity
-                    key={route.key}
-                    accessibilityRole="button"
-                    accessibilityState={isFocused ? { selected: true } : {}}
-                    accessibilityLabel={options.tabBarAccessibilityLabel}
-                    onPress={onPress}
-                    onLongPress={onLongPress}
-                    style={styles.tab}
-                    activeOpacity={0.7}
-                    >
-                    <Ionicons
-                        name={getIconName(route.name, isFocused)}
-                        size={24}
-                        color={isFocused ? COLORS.active : COLORS.inactive}
-                    />
-                    </TouchableOpacity>
-                );
-                })}
-            </View>
+            return (
+              <TouchableOpacity
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={options.tabBarAccessibilityLabel}
+                onPress={onPress}
+                onLongPress={onLongPress}
+                style={styles.tab}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={getIconName(route.name, isFocused)}
+                  size={24}
+                  color={isFocused ? COLORS.active : COLORS.inactive}
+                />
+              </TouchableOpacity>
+            );
+          })}
         </View>
-    {/* Modal */}
+      </View>
+
       <AddTaskModal
         visible={isAddTaskModalOpen}
         onClose={closeAddTaskModal}
       />
     </>
-    
   );
 };
 
@@ -142,11 +138,11 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
     paddingTop: 10,
+    paddingBottom: 10,  // ⭐ VALOR FIJO - NO dinámico
   },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: 'rgb(217,244,52,0.2)',
-
     borderRadius: 30,
     height: 70,
     alignItems: 'center',

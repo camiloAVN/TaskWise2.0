@@ -108,6 +108,7 @@ export const useImagePicker = (): UseImagePickerReturn => {
    * Seleccionar imagen desde la galería
    */
   const pickFromGallery = async (oldImageUri?: string): Promise<string | null> => {
+    console.log('🖼️ [ImagePicker] Opening gallery...');
     setLoading(true);
     setError(null);
 
@@ -115,10 +116,11 @@ export const useImagePicker = (): UseImagePickerReturn => {
       // Solicitar permisos
       const hasPermission = await requestGalleryPermissions();
       if (!hasPermission) {
+        console.log('❌ [ImagePicker] No permission');
         setLoading(false);
         return null;
       }
-
+      console.log('📸 [ImagePicker] Launching gallery...');
       // Abrir galería
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -127,12 +129,14 @@ export const useImagePicker = (): UseImagePickerReturn => {
         quality: 0.7,
         allowsMultipleSelection: false,
       });
-
+ console.log('✅ [ImagePicker] Gallery closed', { canceled: result.canceled });
       // Procesar imagen
       const savedUri = await processImage(result, oldImageUri);
       setLoading(false);
+      console.log('💾 [ImagePicker] Image saved:', savedUri);
       return savedUri;
     } catch (err) {
+      console.error('❌ [ImagePicker] Error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error al seleccionar imagen';
       setError(errorMessage);
       setLoading(false);

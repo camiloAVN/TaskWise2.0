@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
+  Keyboard,
   Modal,
   StyleSheet,
   Text,
@@ -106,6 +107,7 @@ export const ImagePickerSheet: React.FC<ImagePickerSheetProps> = ({
                 <TouchableOpacity
                   style={styles.option}
                   onPress={() => {
+                    Keyboard.dismiss();
                     onSelectCamera();
                     handleClose();
                   }}
@@ -127,6 +129,7 @@ export const ImagePickerSheet: React.FC<ImagePickerSheetProps> = ({
                 <TouchableOpacity
                   style={styles.option}
                   onPress={() => {
+                    Keyboard.dismiss();
                     onSelectGallery();
                     handleClose();
                   }}

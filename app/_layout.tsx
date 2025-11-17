@@ -1,23 +1,48 @@
 import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
+import { initializeImageDirectory } from '@/utils/imageUtils';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native'; // ⭐ Agregar AppState
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../global.css';
-
-import { initializeImageDirectory } from '@/utils/imageUtils';
 
 const _layout = () => {
   const [dbInitialized, setDbInitialized] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
-    useEffect(() => {
-    // Ocultar completamente la barra de navegación
-    NavigationBar.setVisibilityAsync("hidden");
+  // ⭐ AGREGAR: Listener para forzar ocultar barra cuando la app vuelve
+  useEffect(() => {
+    const hideNavigationBar = async () => {
+      try {
+        await NavigationBar.setVisibilityAsync("hidden");
+      } catch (error) {
+        console.log('Error hiding navigation bar:', error);
+      }
+    };
 
+    // Ocultar al montar
+    hideNavigationBar();
+
+    // ⭐ Listener para cuando la app cambia de estado
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        console.log('🔄 App became active, hiding navigation bar...');
+        hideNavigationBar();
+      }
+    });
+
+    // ⭐ Forzar cada 500ms (agresivo pero efectivo)
+    const interval = setInterval(() => {
+      hideNavigationBar();
+    }, 500);
+
+    return () => {
+      subscription.remove();
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -25,16 +50,11 @@ const _layout = () => {
       try {
         console.log('🔄 Initializing database...');
         
-        // Inicializar tablas
         await initDatabase();
-        
-        // Seed inicial
-        await seedInitialData();
-
-        await initializeImageDirectory();
         await migrateAddUserFields();
+        await seedInitialData();
+        await initializeImageDirectory();
         
-        // Verificar salud de la DB
         const health = await checkDatabaseHealth();
         console.log('📊 Database health:', health);
         
@@ -53,7 +73,7 @@ const _layout = () => {
     setupDatabase();
   }, []);
 
-    if (dbError) {
+  if (dbError) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Error de Base de Datos</Text>
@@ -70,6 +90,7 @@ const _layout = () => {
       </View>
     );
   }
+
   return (
     <SafeAreaView className='bg-black' style={{flex:1, backgroundColor:'black'}}>
       <StatusBar style="light"/>
@@ -77,10 +98,10 @@ const _layout = () => {
         <Stack.Screen name="(tabs)" />
       </Stack>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default _layout
+export default _layout;
 
 const styles = StyleSheet.create({
   loadingContainer: {
