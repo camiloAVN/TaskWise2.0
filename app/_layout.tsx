@@ -1,26 +1,29 @@
-import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
+import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { initializeImageDirectory } from '@/utils/imageUtils';
 import { configureNotifications } from '@/utils/notificationUtils';
-import * as Notifications from 'expo-notifications';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native'; // ⭐ Agregar AppState
+import { ActivityIndicator, AppState, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import '../global.css';
 
 const _layout = () => {
   const [dbInitialized, setDbInitialized] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  
+  // ✅ CORRECCIÓN 1: Agregar tipo nullable con valor inicial null
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
+  
   const { addNotification } = useNotificationStore();
 
-  // ⭐ AGREGAR: Listener para forzar ocultar barra cuando la app vuelve
+  // ⭐ Listener para forzar ocultar barra cuando la app vuelve
   useEffect(() => {
     const hideNavigationBar = async () => {
       try {
@@ -140,15 +143,16 @@ const _layout = () => {
       }
     );
 
+    // ✅ CORRECCIÓN 2: Usar el método remove() directamente en las subscripciones
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
-  }, [dbInitialized]);
+  }, [dbInitialized, addNotification]); // Agregar addNotification a las dependencias
 
   if (dbError) {
     return (
