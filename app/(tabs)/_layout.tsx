@@ -18,7 +18,18 @@ const _layout = () => {
     const initializeStores = async () => {
       try {
         await loadUser();
-        const user = useUserStore.getState().user;
+        let user = useUserStore.getState().user;
+        
+        // If no user exists, create a default one
+        if (!user) {
+          console.log('🔧 Creating default user...');
+          const { createUser } = useUserStore.getState();
+          await createUser({
+            name: 'Usuario',
+            email: 'usuario@taskwise.app',
+          });
+          user = useUserStore.getState().user;
+        }
         
         if (user) {
           setUserId(user.id);

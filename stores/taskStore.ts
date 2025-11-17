@@ -110,7 +110,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   loadEssentialTasks: async () => {
     const userId = get().userId;
     if (!userId) {
-      console.error('❌ No user ID set');
+      console.warn('⚠️ No user ID set - waiting for user initialization');
       return;
     }
     
@@ -171,7 +171,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     loadMonthTasks: async (year: number, month: number) => {
     const userId = get().userId;
     if (!userId) {
-      console.error('❌ No user ID set');
+      console.warn('⚠️ No user ID set - waiting for user initialization');
       return;
     }
     
@@ -198,7 +198,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    loadTasksByDateRange: async (startDate: string, endDate: string) => {
     const userId = get().userId;
     if (!userId) {
-      console.error('❌ No user ID set');
+      console.warn('⚠️ No user ID set - waiting for user initialization');
       return;
     }
     
