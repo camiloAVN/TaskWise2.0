@@ -1,6 +1,8 @@
 import { CustomTabBar } from '@/components/CustomTabBar';
+import { WeeklyTasksModal } from '@/components/modals/WeeklyTasksModal';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useTaskStore } from '@/stores/taskStore';
+import { useUIStore } from '@/stores/uiStore';
 import { useUserStore } from '@/stores/userStore';
 import { Tabs } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -16,6 +18,7 @@ const _layout = () => {
   const { loadUser } = useUserStore();
   const { setUserId: setNotificationUserId, loadNotifications, loadUnreadCount } =
     useNotificationStore();
+  const { isWeeklyTasksModalOpen, closeWeeklyTasksModal } = useUIStore();
 
   useEffect(() => {
     const initializeStores = async () => {
@@ -52,42 +55,49 @@ const _layout = () => {
   }, []);
 
   return (
-    <Tabs
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        // ⭐ AGREGAR ESTAS OPCIONES CRÍTICAS
-        tabBarHideOnKeyboard: false,
-        lazy: false,
-        freezeOnBlur: true,
-        animation: 'none',
-      }}
-    >
-      <Tabs.Screen
-        name="Home/index"
-        options={{
-          title: 'Home',
+    <>
+      <Tabs
+        tabBar={(props) => <CustomTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+          // ⭐ AGREGAR ESTAS OPCIONES CRÍTICAS
+          tabBarHideOnKeyboard: false,
+          lazy: false,
+          freezeOnBlur: true,
+          animation: 'none',
         }}
+      >
+        <Tabs.Screen
+          name="Home/index"
+          options={{
+            title: 'Home',
+          }}
+        />
+        <Tabs.Screen
+          name="Stats/index"
+          options={{
+            title: 'Estadísticas',
+          }}
+        />
+        <Tabs.Screen
+          name="Agenda/index"
+          options={{
+            title: 'Agenda',
+          }}
+        />
+        <Tabs.Screen
+          name="Profile/index"
+          options={{
+            title: 'Perfil',
+          }}
+        />
+      </Tabs>
+
+      <WeeklyTasksModal
+        visible={isWeeklyTasksModalOpen}
+        onClose={closeWeeklyTasksModal}
       />
-      <Tabs.Screen
-        name="Stats/index"
-        options={{
-          title: 'Estadísticas',
-        }}
-      />
-      <Tabs.Screen
-        name="Agenda/index"
-        options={{
-          title: 'Agenda',
-        }}
-      />
-      <Tabs.Screen
-        name="Profile/index"
-        options={{
-          title: 'Perfil',
-        }}
-      />
-    </Tabs>
+    </>
   );
 };
 

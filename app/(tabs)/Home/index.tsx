@@ -49,15 +49,19 @@ export default function HomeScreen() {
   const allTodayTasks = useMemo(() => {
     const today = getTodayDate();
     const pendingToday = todayTasks;
-    const completedToday = recentCompleted.filter(t => 
-      t.completedAt && t.completedAt.startsWith(today)
-    );
-    
+    // Filtrar tareas completadas solo del día de hoy
+    // Extraer solo los primeros 10 caracteres (YYYY-MM-DD) para comparar
+    const completedToday = recentCompleted.filter(t => {
+      if (!t.completedAt) return false;
+      const completedDate = t.completedAt.substring(0, 10);
+      return completedDate === today;
+    });
+
     const combined = [...pendingToday, ...completedToday];
     const uniqueTasks = Array.from(
       new Map(combined.map(t => [t.id, t])).values()
     );
-    
+
     return uniqueTasks;
   }, [todayTasks, recentCompleted]);
 
@@ -139,11 +143,20 @@ export default function HomeScreen() {
     setTaskToEdit(null);
   };
 
+  const handleToggleTask = async (taskId: number) => {
+    try {
+      await toggleTask(taskId);
+      console.log('✅ Task toggled:', taskId);
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
+  };
+
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
       console.log('✅ Task deleted:', taskId);
-      
+
       Alert.alert(
         '✅ Tarea Eliminada',
         'La tarea se ha eliminado correctamente',
@@ -215,7 +228,7 @@ export default function HomeScreen() {
           tasks={upcomingTasks}
           allTodayTasks={allTodayTasks}
           onTaskPress={(task) => handleEditTask(task)}
-          onToggleComplete={(taskId) => toggleTask(taskId)}
+          onToggleComplete={handleToggleTask}
           onDeleteTask={handleDeleteTask}
         />
       </ScrollView>

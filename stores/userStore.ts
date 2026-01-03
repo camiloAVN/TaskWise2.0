@@ -62,7 +62,10 @@ interface UserStore {
   
   // Rachas
   updateStreak: (date: string) => Promise<void>;
-  
+
+  // Planificación semanal
+  updateWeeklyModalShown: (notificationId?: string) => Promise<void>;
+
   // Logros
   loadAchievements: () => Promise<void>;
   checkAndUpdateAchievements: () => Promise<Achievement[]>;
@@ -376,15 +379,43 @@ export const useUserStore = create<UserStore>((set, get) => ({
       set({ streak: updatedStreak });
       
       console.log(`🔥 Streak updated: ${newStreakCount} days`);
-      
+
       // Verificar logros de racha
       await get().checkAndUpdateAchievements();
-      
+
     } catch (error) {
       console.error('❌ Error updating streak:', error);
     }
   },
-  
+
+  // ==================== PLANIFICACIÓN SEMANAL ====================
+
+  /**
+   * Actualizar tracking del modal semanal
+   */
+  updateWeeklyModalShown: async (notificationId?: string) => {
+    const user = get().user;
+    if (!user) return;
+
+    try {
+      const { getTodayDate } = await import('../utils/dateUtils');
+      const today = getTodayDate();
+
+      const updatedUser = await UserRepository.updateWeeklyModalTracking(
+        user.id,
+        today,
+        notificationId
+      );
+
+      updatedUser.achievementsUnlocked = user.achievementsUnlocked;
+      set({ user: updatedUser });
+
+      console.log('✅ Weekly modal tracking updated');
+    } catch (error) {
+      console.error('❌ Error updating weekly modal tracking:', error);
+    }
+  },
+
   // ==================== LOGROS ====================
   
   /**

@@ -37,7 +37,11 @@ export interface User {
   // Misiones diarias
   dailyMissionsCompletedToday: number;
   dailyMissionsStreak: number;
-  
+
+  // Planificación semanal
+  lastWeeklyModalShownDate?: string; // YYYY-MM-DD
+  weeklyPlanningNotificationId?: string;
+
   // Fechas
   createdAt: string; // ISO string
   lastActivity: string; // ISO string

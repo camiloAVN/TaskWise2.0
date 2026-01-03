@@ -1,7 +1,10 @@
 import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
 import { migrateAddUserFields } from '@/database/migrateUserFields';
+import { migrateAddWeeklyModalFields } from '@/database/migrateWeeklyModal';
 import { checkDatabaseHealth, initDatabase, seedInitialData } from '@/database/migrations';
+import { UserRepository } from '@/database/repositories/userRepository';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useUIStore } from '@/stores/uiStore';
 import { initializeImageDirectory } from '@/utils/imageUtils';
 import { configureNotifications } from '@/utils/notificationUtils';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -63,6 +66,7 @@ const _layout = () => {
         await initDatabase();
         await migrateAddUserFields();
         await migrateAddNotificationFields();
+        await migrateAddWeeklyModalFields();
         await seedInitialData();
         await initializeImageDirectory();
 
@@ -98,16 +102,40 @@ const _layout = () => {
       async (notification) => {
         console.log('🔔 Notification received:', notification);
 
-        const { taskId, taskTitle } = notification.request.content.data as {
-          taskId: number;
+        const data = notification.request.content.data as {
+          taskId?: number;
           taskTitle?: string;
+          type?: string;
+          userId?: number;
         };
 
-        if (taskId && taskTitle) {
+        // Handle weekly planning notification
+        if (data.type === 'weekly_planning') {
+          console.log('📅 Weekly planning notification received');
+          useUIStore.getState().openWeeklyTasksModal();
+
+          // Reschedule for next week
+          if (data.userId) {
+            const { rescheduleWeeklyPlanningNotification } = await import(
+              '@/utils/weeklyNotificationService'
+            );
+            const user = await UserRepository.getFirstUser();
+            if (user) {
+              await rescheduleWeeklyPlanningNotification(
+                user.id,
+                user.weeklyPlanningNotificationId
+              );
+            }
+          }
+          return;
+        }
+
+        // Handle task reminder notification
+        if (data.taskId && data.taskTitle) {
           try {
             await addNotification({
-              taskId,
-              taskTitle,
+              taskId: data.taskId,
+              taskTitle: data.taskTitle,
               type: 'task_reminder',
             });
             console.log('✅ Notification saved to store');
@@ -153,6 +181,47 @@ const _layout = () => {
       }
     };
   }, [dbInitialized, addNotification]); // Agregar addNotification a las dependencias
+
+  // Verificar si mostrar modal semanal
+  useEffect(() => {
+    if (!dbInitialized) return;
+
+    const checkWeeklyModal = async () => {
+      try {
+        const user = await UserRepository.getFirstUser();
+        if (!user) return;
+
+        const { shouldShowWeeklyModal } = await import('@/utils/weekUtils');
+        const { scheduleWeeklyPlanningNotification } = await import(
+          '@/utils/weeklyNotificationService'
+        );
+        const { getTodayDate } = await import('@/utils/dateUtils');
+
+        // Verificar si debe mostrarse
+        if (shouldShowWeeklyModal(user.lastWeeklyModalShownDate)) {
+          setTimeout(() => {
+            useUIStore.getState().openWeeklyTasksModal();
+          }, 1000);
+        }
+
+        // Programar notificación si no existe
+        if (!user.weeklyPlanningNotificationId) {
+          const notificationId = await scheduleWeeklyPlanningNotification(user.id);
+          if (notificationId) {
+            await UserRepository.updateWeeklyModalTracking(
+              user.id,
+              user.lastWeeklyModalShownDate || getTodayDate(),
+              notificationId
+            );
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error checking weekly modal:', error);
+      }
+    };
+
+    checkWeeklyModal();
+  }, [dbInitialized]);
 
   if (dbError) {
     return (

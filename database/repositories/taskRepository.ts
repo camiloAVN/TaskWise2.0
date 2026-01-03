@@ -347,14 +347,16 @@ export class TaskRepository {
   ): Promise<Task> {
     try {
       const db = await getDatabase();
-      const now = new Date().toISOString();
-          console.log('📝 Completing task in DB:');
-    console.log('   - ID:', id);
-    console.log('   - Earned Points:', earnedPoints);
-    console.log('   - Completed At:', now);
+      const { formatLocalTimestamp } = await import('../../utils/dateUtils');
+      const completedAt = formatLocalTimestamp();
+
+      console.log('📝 Completing task in DB:');
+      console.log('   - ID:', id);
+      console.log('   - Earned Points:', earnedPoints);
+      console.log('   - Completed At (local):', completedAt);
 
       await db.runAsync(
-        `UPDATE tasks SET 
+        `UPDATE tasks SET
           completed = 1,
           status = 'completed',
           completedAt = ?,
@@ -366,24 +368,27 @@ export class TaskRepository {
           updatedAt = ?
          WHERE id = ?`,
         [
-          now,
+          completedAt,
           earnedPoints,
           bonusMultiplier,
           flags.completedEarly ? 1 : 0,
           flags.isFirstTaskOfDay ? 1 : 0,
           flags.completedDuringStreak ? 1 : 0,
-          now,
+          completedAt,
           id,
         ]
       );
-const updatedTask = await this.findById(id);
+
+      const updatedTask = await this.findById(id);
+      if (!updatedTask) {
+        throw new Error('Failed to get updated task');
+      }
+
       console.log('✅ Task completed:', id);
-          console.log('   - Completed:', updatedTask?.completed);
-    console.log('   - Earned Points:', updatedTask?.earnedPoints);
-        if (!updatedTask) {
-      throw new Error('Failed to get updated task');
-    }
-      return (await this.findById(id))!;
+      console.log('   - Completed:', updatedTask.completed);
+      console.log('   - Earned Points:', updatedTask.earnedPoints);
+
+      return updatedTask;
     } catch (error) {
       console.error('❌ Error completing task:', error);
       throw error;
@@ -396,7 +401,8 @@ const updatedTask = await this.findById(id);
 static async toggleCompleted(id: number): Promise<Task> {
   try {
     const db = await getDatabase();
-    
+    const { formatLocalTimestamp } = await import('../../utils/dateUtils');
+
     // Obtener tarea actual
     const task = await this.findById(id);
     if (!task) {
@@ -404,18 +410,18 @@ static async toggleCompleted(id: number): Promise<Task> {
     }
 
     const newCompleted = !task.completed;
-    const now = new Date().toISOString();
+    const timestamp = formatLocalTimestamp();
 
     console.log('🔄 Toggling task in DB:', id, 'New state:', newCompleted);
 
     // Actualizar en DB
     await db.runAsync(
-      `UPDATE tasks 
-       SET completed = ?, 
+      `UPDATE tasks
+       SET completed = ?,
            completedAt = ?,
            updatedAt = ?
        WHERE id = ?`,
-      [newCompleted ? 1 : 0, newCompleted ? now : null, now, id]
+      [newCompleted ? 1 : 0, newCompleted ? timestamp : null, timestamp, id]
     );
 
     // Obtener tarea actualizada
@@ -425,7 +431,7 @@ static async toggleCompleted(id: number): Promise<Task> {
     }
 
     console.log('✅ Task toggled in DB:', id, 'Completed:', updatedTask.completed);
-    
+
     return updatedTask;
   } catch (error) {
     console.error('❌ Error toggling task:', error);

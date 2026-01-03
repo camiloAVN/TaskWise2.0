@@ -387,9 +387,51 @@ private static mapRowToUser(row: any): User {
     
     dailyMissionsCompletedToday: row.dailyMissionsCompletedToday,
     dailyMissionsStreak: row.dailyMissionsStreak,
-    
+
+    lastWeeklyModalShownDate: row.lastWeeklyModalShownDate || undefined,
+    weeklyPlanningNotificationId: row.weeklyPlanningNotificationId || undefined,
+
     createdAt: row.createdAt,
     lastActivity: row.lastActivity,
   };
 }
+
+  /**
+   * Actualizar tracking del modal semanal
+   */
+  static async updateWeeklyModalTracking(
+    id: number,
+    lastShownDate: string,
+    notificationId?: string
+  ): Promise<User> {
+    try {
+      const db = await getDatabase();
+
+      const fields = ['lastWeeklyModalShownDate = ?', 'lastActivity = ?'];
+      const values: any[] = [lastShownDate, new Date().toISOString()];
+
+      if (notificationId !== undefined) {
+        fields.push('weeklyPlanningNotificationId = ?');
+        values.push(notificationId);
+      }
+
+      values.push(id);
+
+      await db.runAsync(
+        `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      const user = await this.findById(id);
+      if (!user) {
+        throw new Error('User not found after update');
+      }
+
+      console.log('✅ Weekly modal tracking updated for user:', id);
+      return user;
+    } catch (error) {
+      console.error('❌ Error updating weekly modal tracking:', error);
+      throw error;
+    }
+  }
 }
