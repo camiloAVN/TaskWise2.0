@@ -27,9 +27,9 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Calcular tamaños responsive
 const isSmallScreen = SCREEN_HEIGHT < 700;
-const TIMER_SIZE = isSmallScreen ? 220 : 280;
-const TIMER_FONT_SIZE = isSmallScreen ? 52 : 64;
-const POMODORO_COUNT_SIZE = isSmallScreen ? 24 : 32;
+const TIMER_SIZE = isSmallScreen ? 180 : 210;
+const TIMER_FONT_SIZE = isSmallScreen ? 40 : 50;
+const POMODORO_COUNT_SIZE = isSmallScreen ? 20 : 30;
 
 export const PomodoroModal: React.FC<PomodoroModalProps> = ({
   visible,

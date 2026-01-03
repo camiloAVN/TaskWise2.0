@@ -129,7 +129,7 @@ export default function AgendaScreen() {
 
   useEffect(() => {
     Animated.timing(calendarHeight, {
-      toValue: showFullCalendar ? 350 : 0,
+      toValue: showFullCalendar ? 370 : 0,
       duration: 300,
       useNativeDriver: false,
     }).start();

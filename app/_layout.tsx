@@ -245,7 +245,7 @@ const _layout = () => {
     <SafeAreaView className='bg-black' style={{flex:1, backgroundColor:'black'}}>
       <StatusBar style="light"/>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="/(tabs)/Home" />
       </Stack>
     </SafeAreaView>
   );

@@ -330,6 +330,21 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 textAlignVertical="top"
               />
             </View>
+            {/* Estimated Time */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tiempo Estimado (minutos)</Text>
+              <TextInput
+                style={styles.input}
+                value={estimatedTime}
+                onChangeText={setEstimatedTime}
+                placeholder="Ej: 30"
+                placeholderTextColor="#666"
+                keyboardType="number-pad"
+                maxLength={4}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
+              />
+            </View>
 
             {/* Difficulty con indicador */}
             <View style={styles.inputGroup}>
@@ -619,21 +634,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
               </View>
             </TouchableOpacity>
 
-            {/* Estimated Time */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tiempo Estimado (minutos)</Text>
-              <TextInput
-                style={styles.input}
-                value={estimatedTime}
-                onChangeText={setEstimatedTime}
-                placeholder="Ej: 30"
-                placeholderTextColor="#666"
-                keyboardType="number-pad"
-                maxLength={4}
-                returnKeyType="done"
-                onSubmitEditing={() => Keyboard.dismiss()}
-              />
-            </View>
+
           </ScrollView>
 
           {/* Save Button */}
@@ -747,6 +748,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    marginBottom:5
   },
   scrollHint: {
     flexDirection: 'row',

@@ -107,6 +107,7 @@ export const AgendaTaskList: React.FC<AgendaTaskListProps> = ({
           scrollEnabled={false}
           removeClippedSubviews={false}
           extraData={[tasks, showDeleteButtons]} //  Agregar showDeleteButtons
+          style={{paddingBottom:80}}
         />
       )}
     </View>
