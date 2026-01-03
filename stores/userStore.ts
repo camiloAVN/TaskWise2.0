@@ -62,6 +62,8 @@ interface UserStore {
   
   // Rachas
   updateStreak: (date: string) => Promise<void>;
+  updateStreakOnDayCompleted: (date: string) => Promise<void>;
+  resetStreakIfDayIncomplete: () => Promise<void>;
 
   // Planificación semanal
   updateWeeklyModalShown: (notificationId?: string) => Promise<void>;
@@ -341,43 +343,43 @@ export const useUserStore = create<UserStore>((set, get) => ({
   },
   
   // ==================== RACHAS ====================
-  
+
   /**
-   * Actualizar racha del usuario
+   * Actualizar racha del usuario (legacy - mantener para compatibilidad)
    */
   updateStreak: async (date: string) => {
     const user = get().user;
     const currentStreak = get().streak;
-    
+
     if (!user || !currentStreak) return;
-    
+
     try {
       // Calcular nueva racha
       const newStreakCount = calculateNewStreak(
         currentStreak.currentStreak,
         currentStreak.lastActivityDate
       );
-      
+
       const isActive = isStreakActive(date);
-      
+
       // Actualizar en DB
       const updatedStreak = await StreakRepository.update(user.id, {
         currentStreak: newStreakCount,
         lastActivityDate: date,
         isActive,
       });
-      
+
       // Actualizar también en user
       await UserRepository.updateStreak(user.id, newStreakCount, date);
-      
+
       const updatedUser = await UserRepository.findById(user.id);
       if (updatedUser) {
         updatedUser.achievementsUnlocked = user.achievementsUnlocked;
         set({ user: updatedUser });
       }
-      
+
       set({ streak: updatedStreak });
-      
+
       console.log(`🔥 Streak updated: ${newStreakCount} days`);
 
       // Verificar logros de racha
@@ -385,6 +387,91 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
     } catch (error) {
       console.error('❌ Error updating streak:', error);
+    }
+  },
+
+  /**
+   * Actualizar racha cuando se completan TODAS las tareas del día
+   */
+  updateStreakOnDayCompleted: async (date: string) => {
+    const user = get().user;
+    const currentStreak = get().streak;
+
+    if (!user || !currentStreak) return;
+
+    try {
+      // Calcular nueva racha
+      const newStreakCount = calculateNewStreak(
+        currentStreak.currentStreak,
+        currentStreak.lastActivityDate
+      );
+
+      const isActive = true; // Siempre activa al completar el día
+
+      // Actualizar en DB
+      const updatedStreak = await StreakRepository.update(user.id, {
+        currentStreak: newStreakCount,
+        lastActivityDate: date,
+        isActive,
+      });
+
+      // Actualizar también en user
+      await UserRepository.updateStreak(user.id, newStreakCount, date);
+
+      const updatedUser = await UserRepository.findById(user.id);
+      if (updatedUser) {
+        updatedUser.achievementsUnlocked = user.achievementsUnlocked;
+        set({ user: updatedUser });
+      }
+
+      set({ streak: updatedStreak });
+
+      console.log(`🔥 Day completed! Streak: ${newStreakCount} days`);
+
+      // Verificar logros de racha
+      await get().checkAndUpdateAchievements();
+    } catch (error) {
+      console.error('❌ Error updating streak on day completed:', error);
+    }
+  },
+
+  /**
+   * Resetear racha si el día no se completó
+   */
+  resetStreakIfDayIncomplete: async () => {
+    const user = get().user;
+    const currentStreak = get().streak;
+
+    if (!user || !currentStreak) return;
+
+    try {
+      const { resetStreak } = await import('../utils/streakUtils');
+      const { getTodayDate } = await import('../utils/dateUtils');
+
+      // Resetear a 0
+      const newStreakCount = resetStreak();
+
+      // Actualizar en DB
+      const updatedStreak = await StreakRepository.update(user.id, {
+        currentStreak: newStreakCount,
+        lastActivityDate: getTodayDate(),
+        isActive: false,
+      });
+
+      // Actualizar también en user
+      await UserRepository.updateStreak(user.id, newStreakCount, getTodayDate());
+
+      const updatedUser = await UserRepository.findById(user.id);
+      if (updatedUser) {
+        updatedUser.achievementsUnlocked = user.achievementsUnlocked;
+        set({ user: updatedUser });
+      }
+
+      set({ streak: updatedStreak });
+
+      console.log('💔 Streak reset - Day incomplete');
+    } catch (error) {
+      console.error('❌ Error resetting streak:', error);
     }
   },
 

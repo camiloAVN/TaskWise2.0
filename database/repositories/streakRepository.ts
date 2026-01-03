@@ -102,7 +102,7 @@ export class StreakRepository {
         : streak.streakStartDate;
 
       await db.runAsync(
-        `UPDATE streaks SET 
+        `UPDATE streaks SET
           currentStreak = ?,
           bestStreak = ?,
           lastActivityDate = ?,
@@ -117,6 +117,7 @@ export class StreakRepository {
           newBestStreak,
           data.lastActivityDate,
           streakStartDate,
+          bestStreakDate,
           data.isActive ? 1 : 0,
           now,
           userId,

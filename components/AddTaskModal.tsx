@@ -479,7 +479,16 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <Text style={styles.label}>Fecha</Text>
                 <TouchableOpacity
                   style={styles.dateButton}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => {
+                    // Actualizar tempDate con la fecha seleccionada
+                    if (dueDate) {
+                      const [year, month, day] = dueDate.split('-').map(Number);
+                      setTempDate(new Date(year, month - 1, day));
+                    } else {
+                      setTempDate(new Date());
+                    }
+                    setShowDatePicker(true);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="calendar-outline" size={20} color="#d9f434" />
@@ -491,7 +500,19 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 <Text style={styles.label}>Hora</Text>
                 <TouchableOpacity
                   style={styles.dateButton}
-                  onPress={() => setShowTimePicker(true)}
+                  onPress={() => {
+                    // Actualizar tempDate con la hora seleccionada o la hora actual
+                    const now = new Date();
+                    if (dueTime) {
+                      const [hours, minutes] = dueTime.split(':').map(Number);
+                      const dateWithTime = new Date();
+                      dateWithTime.setHours(hours, minutes, 0, 0);
+                      setTempDate(dateWithTime);
+                    } else {
+                      setTempDate(now);
+                    }
+                    setShowTimePicker(true);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="time-outline" size={20} color="#d9f434" />

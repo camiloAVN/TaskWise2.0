@@ -24,11 +24,23 @@ export const TaskList: React.FC<TaskListProps> = ({
   const [showDeleteButtons, setShowDeleteButtons] = useState(false); 
 
   const filteredTasks = useMemo(() => {
+    let tasks: Task[];
     if (filter === 'pending') {
-      return allTodayTasks.filter(t => !t.completed);
+      tasks = allTodayTasks.filter(t => !t.completed);
     } else {
-      return allTodayTasks.filter(t => t.completed);
+      tasks = allTodayTasks.filter(t => t.completed);
     }
+
+    // Ordenar por hora (de más temprano a más tarde)
+    return tasks.sort((a, b) => {
+      // Si una tarea no tiene hora, ponerla al final
+      if (!a.dueTime && !b.dueTime) return 0;
+      if (!a.dueTime) return 1;
+      if (!b.dueTime) return -1;
+
+      // Comparar horas en formato HH:mm
+      return a.dueTime.localeCompare(b.dueTime);
+    });
   }, [allTodayTasks, filter]);
 
   const pendingCount = useMemo(() => {

@@ -290,19 +290,33 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       }
 
       const today = getTodayDate();
+      const currentMonth = get().currentMonth;
 
       // Agregar a la lista correspondiente
-      if (input.dueDate === today) {
-        set((state) => ({
-          todayTasks: [newTask, ...state.todayTasks],
-          loading: false,
-        }));
-      } else {
-        set((state) => ({
-          pendingTasks: [newTask, ...state.pendingTasks],
-          loading: false,
-        }));
-      }
+      set((state) => {
+        const updates: any = { loading: false };
+
+        // Actualizar todayTasks o pendingTasks
+        if (input.dueDate === today) {
+          updates.todayTasks = [newTask, ...state.todayTasks];
+        } else {
+          updates.pendingTasks = [newTask, ...state.pendingTasks];
+        }
+
+        // Actualizar monthTasks si la tarea pertenece al mes actual en vista
+        if (currentMonth && newTask.dueDate) {
+          const taskDate = new Date(newTask.dueDate);
+          const taskYear = taskDate.getFullYear();
+          const taskMonth = taskDate.getMonth() + 1;
+
+          if (taskYear === currentMonth.year && taskMonth === currentMonth.month) {
+            updates.monthTasks = [newTask, ...state.monthTasks];
+            console.log('✅ Task added to monthTasks for current view');
+          }
+        }
+
+        return updates;
+      });
 
       console.log('✅ Task created:', newTask.id);
       return newTask;
@@ -364,6 +378,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         pendingTasks: state.pendingTasks.map(t => t.id === id ? updatedTask : t),
         todayTasks: state.todayTasks.map(t => t.id === id ? updatedTask : t),
         recentCompleted: state.recentCompleted.map(t => t.id === id ? updatedTask : t),
+        monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),
         loading: false,
       }));
 
@@ -401,6 +416,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         pendingTasks: state.pendingTasks.filter(t => t.id !== id),
         todayTasks: state.todayTasks.filter(t => t.id !== id),
         recentCompleted: state.recentCompleted.filter(t => t.id !== id),
+        monthTasks: state.monthTasks.filter(t => t.id !== id),
         loading: false,
       }));
 
@@ -457,6 +473,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           pendingTasks: state.pendingTasks.filter(t => t.id !== id),
           todayTasks: state.todayTasks.filter(t => t.id !== id),
           recentCompleted: newRecentCompleted,
+          monthTasks: state.monthTasks.map(t => t.id === id ? completedTask : t),
         };
       });
 
@@ -475,7 +492,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 toggleTask: async (id: number) => {
   try {
     const updatedTask = await TaskRepository.toggleCompleted(id);
-    
+
     // Actualizar en TODAS las listas inmediatamente
     set((state) => {
       // Si se completó, mover a completadas
@@ -484,29 +501,32 @@ toggleTask: async (id: number) => {
           pendingTasks: state.pendingTasks.filter(t => t.id !== id),
           todayTasks: state.todayTasks.filter(t => t.id !== id),
           recentCompleted: [
-            updatedTask, 
+            updatedTask,
             ...state.recentCompleted.slice(0, state.MAX_RECENT_COMPLETED - 1)
           ],
+          monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),
         };
       } else {
         // Si se descompletó, mover de vuelta a la lista correspondiente
         const today = getTodayDate();
         const newRecentCompleted = state.recentCompleted.filter(t => t.id !== id);
-        
+
         if (updatedTask.dueDate === today) {
           return {
             todayTasks: [updatedTask, ...state.todayTasks],
             recentCompleted: newRecentCompleted,
+            monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),
           };
         } else {
           return {
             pendingTasks: [updatedTask, ...state.pendingTasks],
             recentCompleted: newRecentCompleted,
+            monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),
           };
         }
       }
     });
-    
+
     console.log(`✅ Task toggled: ${id}`);
     return updatedTask;
   } catch (error) {

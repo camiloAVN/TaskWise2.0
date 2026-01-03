@@ -12,25 +12,32 @@ export const isStreakActive = (lastActivityDate?: string): boolean => {
 };
 
 /**
- * Calcula la nueva racha después de completar una tarea
+ * Calcula la nueva racha al completar TODAS las tareas del día (estilo Duolingo)
  */
 export const calculateNewStreak = (
   currentStreak: number,
   lastActivityDate?: string
 ): number => {
   const today = getTodayDate();
-  
+
   // Si no hay actividad previa, iniciar racha en 1
   if (!lastActivityDate) return 1;
-  
-  // Si ya hubo actividad hoy, mantener la racha
+
+  // Si ya se completó el día hoy, mantener la racha
   if (lastActivityDate === today) return currentStreak;
-  
-  // Si fue ayer, incrementar la racha
+
+  // Si se completó el día ayer, incrementar la racha
   if (isYesterday(lastActivityDate)) return currentStreak + 1;
-  
-  // Si pasó más de un día, reiniciar la racha
+
+  // Si pasó más de un día sin completar todas las tareas, reiniciar la racha
   return 1;
+};
+
+/**
+ * Resetea la racha a 0 cuando no se completaron todas las tareas del día
+ */
+export const resetStreak = (): number => {
+  return 0;
 };
 
 /**

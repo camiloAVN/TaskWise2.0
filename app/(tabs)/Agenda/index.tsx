@@ -143,10 +143,8 @@ export default function AgendaScreen() {
   const handleCloseModal = () => {
     setModalVisible(false);
     setTaskToEdit(null);
-    
-    if (currentViewMonth) {
-      loadMonthTasks(currentViewMonth.year, currentViewMonth.month);
-    }
+    // No necesitamos recargar monthTasks aquí porque el taskStore
+    // ahora actualiza automáticamente monthTasks al crear/editar tareas
   };
 
   const handleToggleTask = async (taskId: number) => {
