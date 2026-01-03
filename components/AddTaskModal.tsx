@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { Calendar } from 'react-native-calendars';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CATEGORY_INFO, Task, TaskCategory, TaskDifficulty, TaskPriority } from '../types/task';
 import { getTodayDate } from '../utils/dateUtils';
@@ -48,6 +49,11 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+
+  // Multiple days selection
+  const [isMultipleDaysMode, setIsMultipleDaysMode] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [showMultipleDaysCalendar, setShowMultipleDaysCalendar] = useState(false);
 
   // Animation
   const slideAnim = useRef(new Animated.Value(1000)).current;
@@ -115,6 +121,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
     setDueTime('');
     setEstimatedTime('');
     setHasReminder(false);
+    setIsMultipleDaysMode(false);
+    setSelectedDates([]);
+    setShowMultipleDaysCalendar(false);
   };
 
   const handleSave = async () => {
@@ -123,23 +132,52 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       return;
     }
 
+    // Validar que haya días seleccionados en modo múltiple
+    if (isMultipleDaysMode && selectedDates.length === 0) {
+      Alert.alert('Error', 'Selecciona al menos un día');
+      return;
+    }
+
     try {
-      const taskData = {
+      const baseTaskData = {
         title: title.trim(),
         description: description.trim() || undefined,
         difficulty,
         priority,
         category,
-        dueDate: dueDate || undefined,
         dueTime: dueTime || undefined,
         estimatedTime: estimatedTime ? parseInt(estimatedTime) : undefined,
-        hasReminder: hasReminder && !!dueDate && !!dueTime, // Solo si hay fecha y hora
       };
 
       if (taskToEdit) {
-        await updateTask(taskToEdit.id, taskData);
+        // En modo edición, solo actualizar la tarea existente
+        await updateTask(taskToEdit.id, {
+          ...baseTaskData,
+          dueDate: dueDate || undefined,
+          hasReminder: hasReminder && !!dueDate && !!dueTime,
+        });
+      } else if (isMultipleDaysMode) {
+        // Crear múltiples tareas, una por cada día seleccionado
+        for (const date of selectedDates) {
+          await createTask({
+            ...baseTaskData,
+            dueDate: date,
+            hasReminder: hasReminder && !!date && !!dueTime,
+          });
+        }
+
+        Alert.alert(
+          'Tareas Creadas',
+          `Se crearon ${selectedDates.length} tareas para los días seleccionados`,
+          [{ text: 'OK' }]
+        );
       } else {
-        await createTask(taskData);
+        // Crear una sola tarea
+        await createTask({
+          ...baseTaskData,
+          dueDate: dueDate || undefined,
+          hasReminder: hasReminder && !!dueDate && !!dueTime,
+        });
       }
 
       onClose();
@@ -166,6 +204,38 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
       const minutes = String(selectedTime.getMinutes()).padStart(2, '0');
       setDueTime(`${hours}:${minutes}`);
     }
+  };
+
+  const toggleMultipleDaysMode = () => {
+    const newMode = !isMultipleDaysMode;
+    setIsMultipleDaysMode(newMode);
+
+    if (newMode) {
+      // Al activar modo múltiple, agregar la fecha actual si está seleccionada
+      if (dueDate) {
+        setSelectedDates([dueDate]);
+      }
+      setShowMultipleDaysCalendar(true);
+    } else {
+      // Al desactivar, usar la primera fecha seleccionada como dueDate
+      if (selectedDates.length > 0) {
+        setDueDate(selectedDates[0]);
+      }
+      setSelectedDates([]);
+      setShowMultipleDaysCalendar(false);
+    }
+  };
+
+  const handleMultipleDayPress = (dateString: string) => {
+    setSelectedDates(prevDates => {
+      if (prevDates.includes(dateString)) {
+        // Si ya está seleccionado, quitarlo
+        return prevDates.filter(d => d !== dateString);
+      } else {
+        // Si no está seleccionado, agregarlo
+        return [...prevDates, dateString].sort();
+      }
+    });
   };
 
   const handleScrollEnd = (
@@ -431,6 +501,71 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                 </TouchableOpacity>
               </View>
             </View>
+
+            {/* Repeat on Multiple Days Button - Only show in create mode */}
+            {!taskToEdit && (
+              <TouchableOpacity
+                style={[
+                  styles.multipleDaysButton,
+                  isMultipleDaysMode && styles.multipleDaysButtonActive,
+                ]}
+                onPress={toggleMultipleDaysMode}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={isMultipleDaysMode ? 'calendar' : 'calendar-outline'}
+                  size={20}
+                  color={isMultipleDaysMode ? '#000' : '#d9f434'}
+                />
+                <Text
+                  style={[
+                    styles.multipleDaysText,
+                    isMultipleDaysMode && styles.multipleDaysTextActive,
+                  ]}
+                >
+                  {isMultipleDaysMode
+                    ? `Repetir en ${selectedDates.length} días`
+                    : 'Repetir en varios días'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Multiple Days Calendar */}
+            {isMultipleDaysMode && showMultipleDaysCalendar && (
+              <View style={styles.calendarContainer}>
+                <Text style={styles.calendarLabel}>
+                  Selecciona los días (toca para agregar/quitar)
+                </Text>
+                <Calendar
+                  current={getTodayDate()}
+                  onDayPress={(day) => handleMultipleDayPress(day.dateString)}
+                  markedDates={selectedDates.reduce((acc, date) => {
+                    acc[date] = {
+                      selected: true,
+                      selectedColor: '#d9f434',
+                      selectedTextColor: '#000',
+                    };
+                    return acc;
+                  }, {} as any)}
+                  theme={{
+                    calendarBackground: '#1a1a1a',
+                    textSectionTitleColor: '#666',
+                    selectedDayBackgroundColor: '#d9f434',
+                    selectedDayTextColor: '#000',
+                    todayTextColor: '#d9f434',
+                    dayTextColor: '#fff',
+                    textDisabledColor: '#333',
+                    monthTextColor: '#fff',
+                    textMonthFontWeight: 'bold',
+                    textMonthFontSize: 16,
+                    arrowColor: '#d9f434',
+                    dotColor: '#d9f434',
+                    selectedDotColor: '#000',
+                  }}
+                  style={styles.calendar}
+                />
+              </View>
+            )}
 
             {/* Reminder Checkbox */}
             <TouchableOpacity
@@ -738,5 +873,48 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     fontStyle: 'italic',
+  },
+  multipleDaysButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 2,
+    borderColor: '#d9f434',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  multipleDaysButtonActive: {
+    backgroundColor: '#d9f434',
+    borderColor: '#d9f434',
+  },
+  multipleDaysText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#d9f434',
+  },
+  multipleDaysTextActive: {
+    color: '#000',
+  },
+  calendarContainer: {
+    marginBottom: 20,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  calendarLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#d9f434',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  calendar: {
+    borderRadius: 12,
   },
 });
