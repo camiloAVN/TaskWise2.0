@@ -17,7 +17,9 @@ export const UserInfoCard: React.FC<UserInfoCardProps> = ({ user }) => {
         <View style={styles.infoBlock}>
           <Text style={styles.label}>Categoría</Text>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+            {!categoryInfo.isLottie && (
+              <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+            )}
             <Text style={styles.categoryName}>{categoryInfo.name}</Text>
           </View>
         </View>

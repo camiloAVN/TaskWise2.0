@@ -76,28 +76,32 @@ export const CATEGORY_INFO: Record<UserCategory, {
   minLevel: number;
   maxLevel: number;
   color: string;
-  icon: string;
+  icon: any; // Puede ser require() para Lottie o string para emoji
+  isLottie?: boolean; // Flag para identificar si es animación Lottie
 }> = {
   novato: {
     name: 'Novato',
     minLevel: 1,
     maxLevel: 10,
     color: '#8B4513',
-    icon: '🌱',
+    icon: require('@/assets/animations/novato.json'),
+    isLottie: true,
   },
   aprendiz: {
     name: 'Aprendiz',
     minLevel: 11,
     maxLevel: 25,
     color: '#CD7F32',
-    icon: '📚',
+    icon: require('@/assets/animations/book.json'),
+    isLottie: true,
   },
   competente: {
     name: 'Competente',
     minLevel: 26,
     maxLevel: 40,
     color: '#C0C0C0',
-    icon: '⚙️',
+    icon: require('@/assets/animations/Gears.json'),
+    isLottie: true,
   },
   experto: {
     name: 'Experto',
@@ -105,6 +109,7 @@ export const CATEGORY_INFO: Record<UserCategory, {
     maxLevel: 60,
     color: '#FFD700',
     icon: '⭐',
+    isLottie: false,
   },
   maestro: {
     name: 'Maestro',
@@ -112,6 +117,7 @@ export const CATEGORY_INFO: Record<UserCategory, {
     maxLevel: 80,
     color: '#E5E4E2',
     icon: '👑',
+    isLottie: false,
   },
   leyenda: {
     name: 'Leyenda',
@@ -119,5 +125,6 @@ export const CATEGORY_INFO: Record<UserCategory, {
     maxLevel: 100,
     color: '#d9f434',
     icon: '🏆',
+    isLottie: false,
   },
 };

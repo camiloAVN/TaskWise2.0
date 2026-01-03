@@ -32,7 +32,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
 
     // Ordenar por hora (de más temprano a más tarde)
-    return tasks.sort((a, b) => {
+    // Crear nuevo array para asegurar re-render
+    return [...tasks].sort((a, b) => {
       // Si una tarea no tiene hora, ponerla al final
       if (!a.dueTime && !b.dueTime) return 0;
       if (!a.dueTime) return 1;
@@ -109,7 +110,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
             <View style={styles.taskMeta}>
               <View style={styles.metaBadge}>
-                <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+                {!categoryInfo.isLottie && (
+                  <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+                )}
                 <Text style={styles.metaText}>{categoryInfo.name}</Text>
               </View>
 
@@ -256,11 +259,11 @@ export const TaskList: React.FC<TaskListProps> = ({
         <FlatList
           data={filteredTasks}
           renderItem={renderTask}
-          keyExtractor={(item) => `task-${item.id}`}
+          keyExtractor={(item) => `task-${item.id}-${item.completed ? 'c' : 'p'}`}
           scrollEnabled={false}
           removeClippedSubviews={false}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          extraData={[allTodayTasks, showDeleteButtons]} 
+          extraData={[filteredTasks, showDeleteButtons]}
         />
       )}
     </View>

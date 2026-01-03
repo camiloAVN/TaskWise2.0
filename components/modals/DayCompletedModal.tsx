@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
@@ -7,9 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// import LottieView from 'lottie-react-native'; // Descomentar cuando tengas la animación
+
 
 interface DayCompletedModalProps {
   visible: boolean;
@@ -93,19 +94,13 @@ export const DayCompletedModal: React.FC<DayCompletedModalProps> = ({
           {/* Animation Container */}
           <View style={styles.animationContainer}>
             {/* TODO: Reemplazar con tu animación Lottie */}
-            {/* <LottieView
-              source={require('../../assets/animations/celebration.json')}
+            <LottieView
+              source={require('../../assets/animations/Fire.json')}
               autoPlay
               loop
               style={styles.lottie}
-            /> */}
+            />
 
-            {/* Placeholder mientras tanto */}
-            <View style={styles.placeholderAnimation}>
-              <Text style={styles.placeholderEmoji}>🎉</Text>
-              <Text style={styles.placeholderEmoji}>🔥</Text>
-              <Text style={styles.placeholderEmoji}>⭐</Text>
-            </View>
           </View>
 
           {/* Title */}

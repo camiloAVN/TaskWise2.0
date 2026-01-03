@@ -1,3 +1,4 @@
+import { migrateAddGoalsTable } from '@/database/migrateGoals';
 import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
 import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { migrateAddWeeklyModalFields } from '@/database/migrateWeeklyModal';
@@ -67,6 +68,7 @@ const _layout = () => {
         await migrateAddUserFields();
         await migrateAddNotificationFields();
         await migrateAddWeeklyModalFields();
+        await migrateAddGoalsTable();
         await seedInitialData();
         await initializeImageDirectory();
 
@@ -245,7 +247,7 @@ const _layout = () => {
     <SafeAreaView className='bg-black' style={{flex:1, backgroundColor:'black'}}>
       <StatusBar style="light"/>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="/(tabs)/Home" />
+        <Stack.Screen name="(tabs)" />
       </Stack>
     </SafeAreaView>
   );

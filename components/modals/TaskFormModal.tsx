@@ -332,7 +332,9 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
                     onPress={() => setCategory(cat)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.chipIcon}>{info.icon}</Text>
+                    {!info.isLottie && (
+                      <Text style={styles.chipIcon}>{info.icon}</Text>
+                    )}
                     <Text
                       style={[
                         styles.chipText,

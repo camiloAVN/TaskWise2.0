@@ -498,6 +498,7 @@ toggleTask: async (id: number) => {
       // Si se completó, mover a completadas
       if (updatedTask.completed) {
         return {
+          ...state,
           pendingTasks: state.pendingTasks.filter(t => t.id !== id),
           todayTasks: state.todayTasks.filter(t => t.id !== id),
           recentCompleted: [
@@ -513,12 +514,14 @@ toggleTask: async (id: number) => {
 
         if (updatedTask.dueDate === today) {
           return {
+            ...state,
             todayTasks: [updatedTask, ...state.todayTasks],
             recentCompleted: newRecentCompleted,
             monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),
           };
         } else {
           return {
+            ...state,
             pendingTasks: [updatedTask, ...state.pendingTasks],
             recentCompleted: newRecentCompleted,
             monthTasks: state.monthTasks.map(t => t.id === id ? updatedTask : t),

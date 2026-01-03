@@ -217,7 +217,7 @@ export default function StatsScreen() {
         }
       >
         {/* Title */}
-        <Text style={styles.title}>📊 Estadísticas</Text>
+        <Text style={styles.title}>Estadísticas</Text>
 
         {/* Stats Header */}
         <StatsHeader user={user} />

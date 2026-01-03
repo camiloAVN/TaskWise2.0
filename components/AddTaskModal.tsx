@@ -470,7 +470,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({
                           category === cat && styles.horizontalOptionTextActive,
                         ]}
                       >
-                        {CATEGORY_INFO[cat].icon} {CATEGORY_INFO[cat].name}
+                        {!CATEGORY_INFO[cat].isLottie && `${CATEGORY_INFO[cat].icon} `}
+                        {CATEGORY_INFO[cat].name}
                       </Text>
                     </TouchableOpacity>
                   ))}

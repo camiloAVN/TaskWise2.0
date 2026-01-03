@@ -65,7 +65,9 @@ export const AgendaTaskCard: React.FC<AgendaTaskCardProps> = ({
 
               <View style={styles.meta}>
                 <View style={styles.badge}>
-                  <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+                  {!categoryInfo.isLottie && (
+                    <Text style={styles.categoryIcon}>{categoryInfo.icon}</Text>
+                  )}
                   <Text style={styles.badgeText}>{categoryInfo.name}</Text>
                 </View>
 
