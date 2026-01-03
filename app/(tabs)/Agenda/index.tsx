@@ -16,6 +16,7 @@ import { AddTaskModal } from '../../../components/AddTaskModal';
 import { AgendaTaskList } from '../../../components/agenda/AgendaTaskList';
 import { FullCalendar } from '../../../components/agenda/FullCalendar';
 import { WeekCalendar } from '../../../components/agenda/WeekCalendar';
+import { DayCompletedModal } from '../../../components/modals/DayCompletedModal';
 import { Task } from '../../../types/task';
 import { getTodayDate } from '../../../utils/dateUtils';
 import { calculateTaskPoints } from '../../../utils/xpUtils';
@@ -27,6 +28,9 @@ export default function AgendaScreen() {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentViewMonth, setCurrentViewMonth] = useState<{ year: number; month: number } | null>(null);
+  const [dayCompletedModalVisible, setDayCompletedModalVisible] = useState(false);
+  const [hasShownDayCompletedToday, setHasShownDayCompletedToday] = useState(false);
+  const [completedDayStreak, setCompletedDayStreak] = useState(0);
 
   const calendarHeight = useRef(new Animated.Value(0)).current;
   
@@ -45,9 +49,10 @@ export default function AgendaScreen() {
 
   const {
     user,
+    streak,
     incrementTasksCompleted,
     addXP,
-    updateStreak,
+    updateStreakOnDayCompleted,
     checkAndUpdateAchievements,
   } = useUserStore();
 
@@ -56,10 +61,20 @@ export default function AgendaScreen() {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
-    
+
     setCurrentViewMonth({ year, month });
     loadMonthTasks(year, month);
   }, []);
+
+  // Reset day completed modal flag when user's lastTaskDate changes (new day)
+  useEffect(() => {
+    if (user?.lastTaskDate) {
+      const today = getTodayDate();
+      if (user.lastTaskDate !== today) {
+        setHasShownDayCompletedToday(false);
+      }
+    }
+  }, [user?.lastTaskDate]);
 
   const handleMonthChange = useCallback(async (year: number, month: number) => {
     console.log('📅 Loading tasks for month:', year, month);
@@ -153,6 +168,12 @@ export default function AgendaScreen() {
       if (!task || !user) return;
 
       if (!task.completed) {
+        // Verificar si esta es la última tarea pendiente del día de HOY
+        const today = getTodayDate();
+        const todayTasks = allTasks.filter(t => t.dueDate === today);
+        const pendingTodayCount = todayTasks.filter(t => !t.completed && t.id !== taskId).length;
+        const isLastTaskOfToday = task.dueDate === today && pendingTodayCount === 0;
+
         const pointsData = calculateTaskPoints({
           difficulty: task.difficulty,
           priority: task.priority,
@@ -175,9 +196,30 @@ export default function AgendaScreen() {
 
         await incrementTasksCompleted();
         await addXP(pointsData.earnedPoints);
-        await updateStreak(getTodayDate());
         await checkAndUpdateAchievements();
+
+        // Si es la última tarea del día de hoy, actualizar racha y mostrar modal
+        if (isLastTaskOfToday && !hasShownDayCompletedToday) {
+          // Calcular el nuevo streak antes de actualizar
+          const { calculateNewStreak } = await import('../../../utils/streakUtils');
+          const newStreak = calculateNewStreak(
+            streak?.currentStreak || 0,
+            streak?.lastActivityDate
+          );
+
+          await updateStreakOnDayCompleted(getTodayDate());
+
+          // Guardar el nuevo streak para el modal
+          setCompletedDayStreak(newStreak);
+
+          // Mostrar modal de día completado solo una vez
+          setTimeout(() => {
+            setDayCompletedModalVisible(true);
+            setHasShownDayCompletedToday(true);
+          }, 500);
+        }
       } else {
+        // Si se está desmarcando, simplemente toggle sin afectar la racha
         await toggleTask(taskId);
       }
 
@@ -281,6 +323,13 @@ export default function AgendaScreen() {
         visible={modalVisible}
         onClose={handleCloseModal}
         taskToEdit={taskToEdit}
+      />
+
+      <DayCompletedModal
+        visible={dayCompletedModalVisible}
+        onClose={() => setDayCompletedModalVisible(false)}
+        streakCount={completedDayStreak}
+        tasksCompleted={todayTasks.length}
       />
     </SafeAreaView>
   );
