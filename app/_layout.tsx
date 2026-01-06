@@ -1,4 +1,4 @@
-import { migrateAddGoalsTable } from '@/database/migrateGoals';
+import { migrateAddGoalsTable, migrateAddGoalNotifications, migrateAddGoalFailedFields } from '@/database/migrateGoals';
 import { migrateAddNotificationFields } from '@/database/migrateNotificationFields';
 import { migrateAddUserFields } from '@/database/migrateUserFields';
 import { migrateAddWeeklyModalFields } from '@/database/migrateWeeklyModal';
@@ -69,6 +69,8 @@ const _layout = () => {
         await migrateAddNotificationFields();
         await migrateAddWeeklyModalFields();
         await migrateAddGoalsTable();
+        await migrateAddGoalNotifications();
+        await migrateAddGoalFailedFields();
         await seedInitialData();
         await initializeImageDirectory();
 

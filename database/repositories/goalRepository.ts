@@ -13,10 +13,11 @@ export class GoalRepository {
 
     const xpReward = GOAL_XP_REWARDS[input.type];
     const createdAt = new Date().toISOString();
+    const notificationEnabled = input.notificationEnabled ?? false;
 
     const result = await db.runAsync(
-      `INSERT INTO goals (userId, type, title, description, xpReward, createdAt, year, month)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO goals (userId, type, title, description, xpReward, createdAt, year, month, reminderDate, notificationEnabled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         input.type,
@@ -26,6 +27,8 @@ export class GoalRepository {
         createdAt,
         input.year,
         input.month || null,
+        input.reminderDate || null,
+        notificationEnabled ? 1 : 0,
       ]
     );
 
@@ -36,10 +39,13 @@ export class GoalRepository {
       title: input.title,
       description: input.description,
       completed: false,
+      failed: false,
       xpReward,
       createdAt,
       year: input.year,
       month: input.month,
+      reminderDate: input.reminderDate,
+      notificationEnabled,
     };
   }
 
@@ -59,6 +65,8 @@ export class GoalRepository {
     return {
       ...result,
       completed: Boolean(result.completed),
+      failed: Boolean(result.failed),
+      notificationEnabled: Boolean(result.notificationEnabled),
     };
   }
 
@@ -79,6 +87,8 @@ export class GoalRepository {
     return results.map(goal => ({
       ...goal,
       completed: Boolean(goal.completed),
+      failed: Boolean(goal.failed),
+      notificationEnabled: Boolean(goal.notificationEnabled),
     }));
   }
 
@@ -100,6 +110,8 @@ export class GoalRepository {
     return results.map(goal => ({
       ...goal,
       completed: Boolean(goal.completed),
+      failed: Boolean(goal.failed),
+      notificationEnabled: Boolean(goal.notificationEnabled),
     }));
   }
 
@@ -120,6 +132,8 @@ export class GoalRepository {
     return results.map(goal => ({
       ...goal,
       completed: Boolean(goal.completed),
+      failed: Boolean(goal.failed),
+      notificationEnabled: Boolean(goal.notificationEnabled),
     }));
   }
 
@@ -153,6 +167,21 @@ export class GoalRepository {
         updates.push('completedAt = ?');
         values.push(null);
       }
+    }
+
+    if (input.reminderDate !== undefined) {
+      updates.push('reminderDate = ?');
+      values.push(input.reminderDate);
+    }
+
+    if (input.notificationEnabled !== undefined) {
+      updates.push('notificationEnabled = ?');
+      values.push(input.notificationEnabled ? 1 : 0);
+    }
+
+    if (input.notificationId !== undefined) {
+      updates.push('notificationId = ?');
+      values.push(input.notificationId);
     }
 
     values.push(id);
@@ -236,5 +265,58 @@ export class GoalRepository {
       totalYearly: yearlyStats?.total || 0,
       completedYearly: yearlyStats?.completed || 0,
     };
+  }
+
+  /**
+   * Marcar una meta como fallida (no se cumplió en el tiempo establecido)
+   */
+  static async markAsFailed(id: number): Promise<Goal> {
+    const db = await getDatabase();
+
+    const goal = await this.findById(id);
+    if (!goal) {
+      throw new Error('Goal not found');
+    }
+
+    const failedAt = new Date().toISOString();
+
+    await db.runAsync(
+      'UPDATE goals SET failed = 1, failedAt = ? WHERE id = ?',
+      [failedAt, id]
+    );
+
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new Error('Goal not found after update');
+    }
+
+    return updated;
+  }
+
+  /**
+   * Obtener metas vencidas (fecha pasada, no completadas y no fallidas)
+   */
+  static async findExpiredGoals(userId: number): Promise<Goal[]> {
+    const db = await getDatabase();
+
+    const now = new Date().toISOString();
+
+    const results = await db.getAllAsync<Goal>(
+      `SELECT * FROM goals
+       WHERE userId = ?
+       AND completed = 0
+       AND failed = 0
+       AND reminderDate IS NOT NULL
+       AND reminderDate < ?
+       ORDER BY reminderDate ASC`,
+      [userId, now]
+    );
+
+    return results.map(goal => ({
+      ...goal,
+      completed: Boolean(goal.completed),
+      failed: Boolean(goal.failed),
+      notificationEnabled: Boolean(goal.notificationEnabled),
+    }));
   }
 }

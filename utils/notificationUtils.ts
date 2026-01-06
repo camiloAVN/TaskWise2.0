@@ -19,11 +19,20 @@ export const configureNotifications = async (): Promise<void> => {
     }),
   });
 
-  // Configurar canal de notificaciones en Android
+  // Configurar canales de notificaciones en Android
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('task-reminders', {
       name: 'Recordatorios de Tareas',
       description: 'Notificaciones para recordarte tus tareas programadas',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#d9f434',
+    });
+
+    await Notifications.setNotificationChannelAsync('goal-reminders', {
+      name: 'Recordatorios de Metas',
+      description: 'Notificaciones para verificar el cumplimiento de tus metas',
       importance: Notifications.AndroidImportance.HIGH,
       sound: 'default',
       vibrationPattern: [0, 250, 250, 250],
@@ -159,5 +168,65 @@ export const hasValidNotification = async (
   } catch (error) {
     console.error('❌ Error checking notification validity:', error);
     return false;
+  }
+};
+
+/**
+ * Programa una notificación para una meta
+ */
+export const scheduleGoalNotification = async (
+  goalId: number,
+  title: string,
+  reminderDate: string
+): Promise<string | null> => {
+  try {
+    // Verificar permisos
+    const hasPermission = await requestNotificationPermissions();
+    if (!hasPermission) {
+      return null;
+    }
+
+    // Parsear la fecha del recordatorio (ISO string)
+    const triggerDate = new Date(reminderDate);
+
+    // Verificar que la fecha sea futura
+    const now = new Date();
+    if (triggerDate <= now) {
+      console.warn('⚠️ Cannot schedule goal notification for past date');
+      return null;
+    }
+
+    // Programar la notificación
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🎯 ¿Lograste cumplir esta meta?',
+        body: title,
+        data: { goalId, goalTitle: title, type: 'goal' },
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+        color: '#d9f434',
+      },
+      trigger: triggerDate,
+    });
+
+    console.log(`✅ Goal notification scheduled: ${notificationId} for ${triggerDate.toISOString()}`);
+    return notificationId;
+  } catch (error) {
+    console.error('❌ Error scheduling goal notification:', error);
+    return null;
+  }
+};
+
+/**
+ * Cancela una notificación de meta programada
+ */
+export const cancelGoalNotification = async (
+  notificationId: string
+): Promise<void> => {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+    console.log(`✅ Goal notification cancelled: ${notificationId}`);
+  } catch (error) {
+    console.error('❌ Error cancelling goal notification:', error);
   }
 };

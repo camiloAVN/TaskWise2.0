@@ -1,6 +1,8 @@
 import { GoalRepository } from '@/database/repositories';
 import { useUserStore } from '@/stores/userStore';
 import { Goal, GoalType } from '@/types/goal';
+import { scheduleGoalNotification, cancelGoalNotification } from '@/utils/notificationUtils';
+import { checkAndPenalizeExpiredGoals, formatPenaltyMessage } from '@/utils/goalUtils';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Keyboard, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,6 +46,18 @@ const Profile = () => {
     if (!user) return;
 
     try {
+      // Verificar metas vencidas y aplicar penalizaciones
+      const failedGoals = await checkAndPenalizeExpiredGoals(user.id);
+
+      // Si hubo metas fallidas, recargar el usuario para actualizar XP
+      if (failedGoals.length > 0) {
+        await loadUser(); // Recargar usuario para actualizar XP en la UI
+
+        // Mostrar mensaje al usuario
+        const message = formatPenaltyMessage(failedGoals);
+        Alert.alert('Metas no cumplidas', message);
+      }
+
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1;
@@ -147,7 +161,13 @@ const Profile = () => {
   };
 
   // Handlers para metas
-  const handleAddGoal = async (type: GoalType, title: string, description?: string) => {
+  const handleAddGoal = async (
+    type: GoalType,
+    title: string,
+    description?: string,
+    reminderDate?: string,
+    notificationEnabled?: boolean
+  ) => {
     if (!user) return;
 
     try {
@@ -161,13 +181,45 @@ const Profile = () => {
         description,
         year: currentYear,
         month: type === 'monthly' ? currentMonth : undefined,
+        reminderDate,
+        notificationEnabled,
       });
 
-      // Actualizar el estado local
-      if (type === 'monthly') {
-        setMonthlyGoals([newGoal, ...monthlyGoals]);
+      // Programar notificación si está habilitada y hay fecha
+      if (notificationEnabled && reminderDate) {
+        const notificationId = await scheduleGoalNotification(
+          newGoal.id,
+          title,
+          reminderDate
+        );
+
+        if (notificationId) {
+          // Actualizar la meta con el ID de la notificación
+          const updatedGoal = await GoalRepository.update(newGoal.id, {
+            notificationId,
+          });
+
+          // Actualizar el estado local
+          if (type === 'monthly') {
+            setMonthlyGoals([updatedGoal, ...monthlyGoals]);
+          } else {
+            setYearlyGoals([updatedGoal, ...yearlyGoals]);
+          }
+        } else {
+          // Si no se pudo programar la notificación, agregar la meta sin notificación
+          if (type === 'monthly') {
+            setMonthlyGoals([newGoal, ...monthlyGoals]);
+          } else {
+            setYearlyGoals([newGoal, ...yearlyGoals]);
+          }
+        }
       } else {
-        setYearlyGoals([newGoal, ...yearlyGoals]);
+        // Actualizar el estado local
+        if (type === 'monthly') {
+          setMonthlyGoals([newGoal, ...monthlyGoals]);
+        } else {
+          setYearlyGoals([newGoal, ...yearlyGoals]);
+        }
       }
 
       Alert.alert('¡Listo!', 'Meta creada exitosamente');
@@ -181,9 +233,15 @@ const Profile = () => {
     try {
       const updatedGoal = await GoalRepository.toggleCompleted(id);
 
-      // Si la meta se completó, dar XP al usuario
+      // Si la meta se completó, dar XP al usuario y cancelar notificación
       if (updatedGoal.completed) {
         await addXP(updatedGoal.xpReward);
+
+        // Cancelar notificación si existe
+        if (updatedGoal.notificationId) {
+          await cancelGoalNotification(updatedGoal.notificationId);
+        }
+
         Alert.alert(
           '¡Meta Completada!',
           `Has ganado ${updatedGoal.xpReward} XP por completar esta meta.`
@@ -204,6 +262,14 @@ const Profile = () => {
 
   const handleDeleteGoal = async (id: number) => {
     try {
+      // Buscar la meta para obtener el notificationId
+      const goalToDelete = [...monthlyGoals, ...yearlyGoals].find(g => g.id === id);
+
+      // Cancelar notificación si existe
+      if (goalToDelete?.notificationId) {
+        await cancelGoalNotification(goalToDelete.notificationId);
+      }
+
       await GoalRepository.delete(id);
 
       // Actualizar el estado local
@@ -217,9 +283,43 @@ const Profile = () => {
     }
   };
 
-  const handleEditGoal = async (id: number, title: string, description?: string) => {
+  const handleEditGoal = async (
+    id: number,
+    title: string,
+    description?: string,
+    reminderDate?: string,
+    notificationEnabled?: boolean
+  ) => {
     try {
-      const updatedGoal = await GoalRepository.update(id, { title, description });
+      // Obtener la meta actual para comparar notificaciones
+      const currentGoal = [...monthlyGoals, ...yearlyGoals].find(g => g.id === id);
+
+      // Manejar cambios en notificación
+      let newNotificationId = currentGoal?.notificationId;
+
+      if (notificationEnabled && reminderDate) {
+        // Cancelar notificación anterior si existe
+        if (currentGoal?.notificationId) {
+          await cancelGoalNotification(currentGoal.notificationId);
+        }
+
+        // Programar nueva notificación
+        const notificationId = await scheduleGoalNotification(id, title, reminderDate);
+        newNotificationId = notificationId || undefined;
+      } else if (!notificationEnabled && currentGoal?.notificationId) {
+        // Desactivar notificación - cancelar la existente
+        await cancelGoalNotification(currentGoal.notificationId);
+        newNotificationId = undefined;
+      }
+
+      // Actualizar la meta con todos los cambios
+      const updatedGoal = await GoalRepository.update(id, {
+        title,
+        description,
+        reminderDate,
+        notificationEnabled,
+        notificationId: newNotificationId,
+      });
 
       // Actualizar el estado local
       if (updatedGoal.type === 'monthly') {

@@ -41,3 +41,83 @@ export async function migrateAddGoalsTable() {
     throw error;
   }
 }
+
+/**
+ * Migración para agregar campos de notificaciones a la tabla goals
+ */
+export async function migrateAddGoalNotifications() {
+  try {
+    const db = await getDatabase();
+
+    console.log('🔄 Running goal notifications migration...');
+
+    // Verificar si las columnas ya existen
+    const tableInfo = await db.getAllAsync(`PRAGMA table_info(goals)`);
+    const columnNames = tableInfo.map((col: any) => col.name);
+
+    // Agregar columna reminderDate si no existe
+    if (!columnNames.includes('reminderDate')) {
+      await db.execAsync(`
+        ALTER TABLE goals ADD COLUMN reminderDate TEXT;
+      `);
+      console.log('✅ Added reminderDate column');
+    }
+
+    // Agregar columna notificationEnabled si no existe
+    if (!columnNames.includes('notificationEnabled')) {
+      await db.execAsync(`
+        ALTER TABLE goals ADD COLUMN notificationEnabled INTEGER DEFAULT 0;
+      `);
+      console.log('✅ Added notificationEnabled column');
+    }
+
+    // Agregar columna notificationId si no existe
+    if (!columnNames.includes('notificationId')) {
+      await db.execAsync(`
+        ALTER TABLE goals ADD COLUMN notificationId TEXT;
+      `);
+      console.log('✅ Added notificationId column');
+    }
+
+    console.log('✅ Goal notifications migration completed');
+  } catch (error) {
+    console.error('❌ Error in goal notifications migration:', error);
+    throw error;
+  }
+}
+
+/**
+ * Migración para agregar campos de metas fallidas
+ */
+export async function migrateAddGoalFailedFields() {
+  try {
+    const db = await getDatabase();
+
+    console.log('🔄 Running goal failed fields migration...');
+
+    // Verificar si las columnas ya existen
+    const tableInfo = await db.getAllAsync(`PRAGMA table_info(goals)`);
+    const columnNames = tableInfo.map((col: any) => col.name);
+
+    // Agregar columna failed si no existe
+    if (!columnNames.includes('failed')) {
+      await db.execAsync(`
+        ALTER TABLE goals ADD COLUMN failed INTEGER DEFAULT 0;
+      `);
+      console.log('✅ Added failed column');
+    }
+
+    // Agregar columna failedAt si no existe
+    if (!columnNames.includes('failedAt')) {
+      await db.execAsync(`
+        ALTER TABLE goals ADD COLUMN failedAt TEXT;
+      `);
+      console.log('✅ Added failedAt column');
+    }
+
+    console.log('✅ Goal failed fields migration completed');
+  } catch (error) {
+    console.error('❌ Error in goal failed fields migration:', error);
+    throw error;
+  }
+}
